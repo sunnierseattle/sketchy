@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { SCHEMA_VERSION } from '../types';
 import type {
   Annotation,
@@ -21,55 +20,39 @@ const EDGE_CONFIDENCE = ['high', 'medium', 'low'] as const;
 const EDGE_POLARITY = ['positive', 'negative'] as const;
 const ANNOTATION_KINDS = ['text', 'rect', 'ellipse', 'line'] as const;
 
-const recordSchema = z.record(z.string(), z.unknown());
-const pointSchema = z.object({
-  x: z.unknown().optional(),
-  y: z.unknown().optional(),
-}).passthrough();
-const sizeSchema = z.object({
-  width: z.number().finite(),
-  height: z.number().finite(),
-}).passthrough();
-const layoutDirectionSchema = z.enum(LAYOUT_DIRECTIONS);
-const edgeRoutingModeSchema = z.enum(EDGE_ROUTING_MODES);
-const junctionTypeSchema = z.enum(JUNCTION_TYPES);
-const edgeConfidenceSchema = z.enum(EDGE_CONFIDENCE);
-const edgePolaritySchema = z.enum(EDGE_POLARITY);
-const annotationKindSchema = z.enum(ANNOTATION_KINDS);
-
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  const result = recordSchema.safeParse(value);
-  return result.success ? result.data : null;
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function normalizePosition(raw: unknown): { x: number; y: number } {
-  const result = pointSchema.safeParse(raw);
-  const position = result.success ? result.data : {};
+  const p = asRecord(raw);
   return {
-    x: isFiniteNumber(position.x) ? position.x : 0,
-    y: isFiniteNumber(position.y) ? position.y : 0,
+    x: p && isFiniteNumber(p.x) ? p.x : 0,
+    y: p && isFiniteNumber(p.y) ? p.y : 0,
   };
 }
 
 function normalizeSize(raw: unknown): { width: number; height: number } | undefined {
-  const result = sizeSchema.safeParse(raw);
-  if (!result.success) return undefined;
-  const { width, height } = result.data;
-  if (width <= 0 || height <= 0) return undefined;
-  return { width, height };
+  const s = asRecord(raw);
+  if (!s || !isFiniteNumber(s.width) || !isFiniteNumber(s.height)) return undefined;
+  if (s.width <= 0 || s.height <= 0) return undefined;
+  return { width: s.width, height: s.height };
 }
 
-function enumValue<T extends z.ZodEnum>(
+function enumValue<T extends string>(
   value: unknown,
-  schema: T,
-  fallback: z.infer<T>,
-): z.infer<T> {
-  const result = schema.safeParse(value);
-  return result.success ? result.data : fallback;
+  allowed: readonly T[],
+  fallback: T,
+): T {
+  return typeof value === 'string' && (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : fallback;
 }
 
 function optionalString(value: unknown): string | undefined {
@@ -83,8 +66,8 @@ function normalizeStringArray(value: unknown): string[] {
 
 function normalizeSettings(raw: unknown): DiagramSettings {
   const s = asRecord(raw) ?? {};
-  const layoutDirection = enumValue(s.layoutDirection, layoutDirectionSchema, 'BT');
-  const edgeRoutingMode = enumValue(s.edgeRoutingMode, edgeRoutingModeSchema, 'dynamic');
+  const layoutDirection = enumValue(s.layoutDirection, LAYOUT_DIRECTIONS, 'BT');
+  const edgeRoutingMode = enumValue(s.edgeRoutingMode, EDGE_ROUTING_MODES, 'dynamic');
   return {
     layoutDirection,
     showGrid: typeof s.showGrid === 'boolean' ? s.showGrid : true,
@@ -111,7 +94,7 @@ function normalizeNodes(raw: unknown): DiagramNode[] {
       data: {
         label: typeof data.label === 'string' ? data.label : '',
         tags: normalizeStringArray(data.tags),
-        junctionType: enumValue(data.junctionType, junctionTypeSchema, 'or') as JunctionType,
+        junctionType: enumValue<JunctionType>(data.junctionType, JUNCTION_TYPES, 'or'),
         ...(optionalString(data.notes) ? { notes: optionalString(data.notes) } : {}),
         ...(isFiniteNumber(data.value) ? { value: data.value } : {}),
         ...(optionalString(data.unit) ? { unit: optionalString(data.unit) } : {}),
@@ -144,10 +127,10 @@ function normalizeEdges(raw: unknown): DiagramEdge[] {
       target: record.target,
       ...(sourceSide ? { sourceSide } : {}),
       ...(targetSide ? { targetSide } : {}),
-      ...(edgeConfidenceSchema.safeParse(record.confidence).success
+      ...(typeof record.confidence === 'string' && (EDGE_CONFIDENCE as readonly string[]).includes(record.confidence)
         ? { confidence: record.confidence as EdgeConfidence }
         : {}),
-      ...(edgePolaritySchema.safeParse(record.polarity).success
+      ...(typeof record.polarity === 'string' && (EDGE_POLARITY as readonly string[]).includes(record.polarity)
         ? { polarity: record.polarity as EdgePolarity }
         : {}),
       ...(record.delay === true ? { delay: true } : {}),
@@ -177,7 +160,7 @@ function normalizeAnnotations(raw: unknown): Annotation[] {
   return raw.flatMap((entry, index): Annotation[] => {
     const record = asRecord(entry);
     if (!record) return [];
-    const kind = enumValue(record.kind, annotationKindSchema, 'rect') as AnnotationKind;
+    const kind = enumValue<AnnotationKind>(record.kind, ANNOTATION_KINDS, 'rect');
     const data = normalizeAnnotationData(record.data);
     const id = typeof record.id === 'string' && record.id.length > 0 ? record.id : `annotation-${index + 1}`;
 
