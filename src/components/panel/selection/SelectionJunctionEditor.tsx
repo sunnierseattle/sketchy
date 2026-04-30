@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import {
-  getJunctionOptions,
   getJunctionState,
   type Framework,
 } from '../../../core/framework-types';
@@ -9,6 +8,7 @@ import type { DiagramNode, JunctionType } from '../../../core/types';
 import { useDiagramStore } from '../../../store/diagram-store';
 import FormField from '../../form/FormField';
 import ButtonGroup from '../../form/ButtonGroup';
+import { getJunctionSelectionState } from '../../shared/node-selection';
 
 interface Props {
   selectedNodes: DiagramNode[];
@@ -54,45 +54,31 @@ function SelectionJunctionEditor({
     );
   }
 
-  const options = getJunctionOptions(framework);
-  const isMath = options.some((option) => option.id === 'add' || option.id === 'multiply');
-  const minIndegree = isMath ? 1 : 2;
-  const eligibleIds = selectedNodes
-    .filter((node) => (degreesMap.get(node.id)?.indegree ?? 0) >= minIndegree)
-    .map((node) => node.id);
-
-  if (options.length === 0 || eligibleIds.length === 0) return null;
-
-  const eligibleNodes = selectedNodes.filter((node) => eligibleIds.includes(node.id));
-  const sharedType = eligibleNodes.every(
-    (node) => node.data.junctionType === eligibleNodes[0].data.junctionType,
-  )
-    ? eligibleNodes[0].data.junctionType
-    : null;
-  const partial = eligibleIds.length < selectedNodes.length;
+  const junction = getJunctionSelectionState(selectedNodes, framework, degreesMap);
+  if (!junction.visible) return null;
 
   return (
-    <FormField label={isMath ? 'Operator' : 'Junction Logic'}>
+    <FormField label={junction.label}>
       <div className="control-row">
-        {options.map((option) => (
+        {junction.options.map((option) => (
           <button
             key={option.id}
             className="btn btn-xs"
             style={
-              sharedType === option.id
+              junction.sharedType === option.id
                 ? { background: 'var(--accent)', color: 'white' }
                 : { background: 'var(--secondary)' }
             }
             title={option.description}
-            onClick={() => updateNodesJunction(eligibleIds, option.id as JunctionType)}
+            onClick={() => updateNodesJunction(junction.eligibleIds, option.id as JunctionType)}
           >
             {option.label}
           </button>
         ))}
       </div>
-      {partial && (
+      {junction.partial && (
         <p className="field-label" style={{ marginTop: '-0.25rem' }}>
-          Applies to {eligibleIds.length} of {selectedNodes.length} selected
+          Applies to {junction.eligibleIds.length} of {selectedNodes.length} selected
         </p>
       )}
     </FormField>

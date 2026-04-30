@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Lock, Unlock, Trash2 } from 'lucide-react';
-import {
-  getJunctionOptions,
-  type Framework,
-} from '../../core/framework-types';
+import type { Framework } from '../../core/framework-types';
 import type { DiagramNode, JunctionType } from '../../core/types';
 import type { NodeDegrees } from '../../core/graph/derived';
 import { useDiagramStore } from '../../store/diagram-store';
 import type { DiagramSnapshot } from '../../store/diagram-store-types';
 import { rememberRecentColor } from '../../store/color-history-store';
 import ColorPickerSection from '../shared/ColorPickerSection';
-import { colorsMatch } from '../shared/color-utils';
+import {
+  getJunctionSelectionState,
+  getNodeIds,
+  getNodeTagStats,
+  getSharedNodeColor,
+} from '../shared/node-selection';
 
 interface Props {
   selectedNodes: DiagramNode[];
@@ -20,15 +22,6 @@ interface Props {
   beginColorPickerInteraction: () => void;
   endColorPickerInteraction: () => void;
   registerCloseActions: (actions: { apply: () => void; cancel: () => void } | null) => void;
-}
-
-function sharedColor(
-  nodes: DiagramNode[],
-  key: 'color' | 'textColor',
-): string | undefined {
-  if (nodes.length === 0) return undefined;
-  const first = nodes[0].data[key];
-  return nodes.every((n) => colorsMatch(n.data[key], first)) ? first : undefined;
 }
 
 export default function MultiNodeContextMenu({
@@ -51,7 +44,7 @@ export default function MultiNodeContextMenu({
   const toggleNodeLocked = useDiagramStore((s) => s.toggleNodeLocked);
   const deleteNodes = useDiagramStore((s) => s.deleteNodes);
 
-  const ids = useMemo(() => selectedNodes.map((n) => n.id), [selectedNodes]);
+  const ids = useMemo(() => getNodeIds(selectedNodes), [selectedNodes]);
 
   const originalsRef = useRef(
     new Map(selectedNodes.map((n) => [n.id, {
@@ -65,8 +58,8 @@ export default function MultiNodeContextMenu({
   const bgDirtyRef = useRef(false);
   const textDirtyRef = useRef(false);
 
-  const currentBg = sharedColor(selectedNodes, 'color');
-  const currentText = sharedColor(selectedNodes, 'textColor');
+  const currentBg = getSharedNodeColor(selectedNodes, 'color');
+  const currentText = getSharedNodeColor(selectedNodes, 'textColor');
 
   const captureSnapshotOnce = useCallback(() => {
     if (preStateRef.current) return;
@@ -124,17 +117,10 @@ export default function MultiNodeContextMenu({
     closeContextMenu();
   }, [commitColors, closeContextMenu]);
 
-  // Junction eligibility
-  const junctionOptions = getJunctionOptions(framework);
-  const isMath = junctionOptions.some((o) => o.id === 'add' || o.id === 'multiply');
-  const minIndegree = isMath ? 1 : 2;
-  const eligibleIds = selectedNodes
-    .filter((n) => (degreesMap.get(n.id)?.indegree ?? 0) >= minIndegree)
-    .map((n) => n.id);
-  const showJunction = junctionOptions.length > 0 && eligibleIds.length > 0;
-
   const total = selectedNodes.length;
   const allLocked = selectedNodes.every((n) => n.data.locked);
+  const tagStats = getNodeTagStats(selectedNodes, framework.nodeTags);
+  const junction = getJunctionSelectionState(selectedNodes, framework, degreesMap);
 
   return (
     <>
@@ -142,10 +128,7 @@ export default function MultiNodeContextMenu({
 
       {framework.nodeTags.length > 0 && (
         <>
-          {framework.nodeTags.map((tag) => {
-            const count = selectedNodes.filter((n) => n.data.tags.includes(tag.id)).length;
-            const allHave = count === total;
-            const noneHave = count === 0;
+          {tagStats.map(({ tag, count, allHave, noneHave }) => {
             return (
               <div key={tag.id} className="context-menu-multi-row">
                 <span className="tag-chip-dot" style={{ backgroundColor: tag.color }} />
@@ -196,21 +179,21 @@ export default function MultiNodeContextMenu({
         onPickerBlur={endColorPickerInteraction}
       />
 
-      {showJunction && (
+      {junction.visible && (
         <>
           <div className="context-menu-separator" />
           <div className="context-menu-label">
-            {isMath ? 'Operator' : 'Junction Logic'}
+            {junction.label}
           </div>
           <div className="context-menu-multi-row">
-            {junctionOptions.map((o) => (
+            {junction.options.map((o) => (
               <button
                 key={o.id}
                 className="btn btn-secondary btn-xs"
                 style={{ flex: 1 }}
                 title={o.description}
                 onClick={() => {
-                  updateNodesJunction(eligibleIds, o.id as JunctionType);
+                  updateNodesJunction(junction.eligibleIds, o.id as JunctionType);
                   applyAndClose();
                 }}
               >
@@ -218,9 +201,9 @@ export default function MultiNodeContextMenu({
               </button>
             ))}
           </div>
-          {eligibleIds.length < total && (
+          {junction.partial && (
             <p className="field-label" style={{ padding: '0 0.75rem 0.25rem' }}>
-              Applies to {eligibleIds.length} of {total} selected
+              Applies to {junction.eligibleIds.length} of {total} selected
             </p>
           )}
         </>

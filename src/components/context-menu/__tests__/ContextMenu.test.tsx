@@ -6,20 +6,11 @@ import ContextMenu from '../ContextMenu';
 import { useDiagramStore } from '../../../store/diagram-store';
 import { resetRecentColorsForTests } from '../../../store/color-history-store';
 import { useUIStore } from '../../../store/ui-store';
+import { resetDiagramAndUIStores } from '../../../test/store-fixtures';
 
 function resetStores() {
   resetRecentColorsForTests();
-  useDiagramStore.getState().setFramework('crt');
-  useDiagramStore.getState().newDiagram();
-  useDiagramStore.setState((s) => ({ diagram: { ...s.diagram, nodes: [] } }));
-  useUIStore.setState({
-    selectedNodeIds: [],
-    selectedEdgeIds: [],
-    contextMenu: null,
-    sidePanelOpen: true,
-    chatPanelMode: 'shared',
-    interactionMode: 'select',
-  });
+  resetDiagramAndUIStores();
 }
 
 function renderContextMenu() {

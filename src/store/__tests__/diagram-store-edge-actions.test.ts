@@ -1,39 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useDiagramStore } from '../diagram-store';
-import { useUIStore } from '../ui-store';
-
-function resetStore() {
-  useDiagramStore.getState().setFramework('crt');
-  useDiagramStore.getState().newDiagram();
-  useDiagramStore.setState((s) => ({ diagram: { ...s.diagram, nodes: [] } }));
-  useUIStore.setState({
-    selectedNodeIds: [],
-    selectedEdgeIds: [],
-    selectedLoopId: null,
-    contextMenu: null,
-    toasts: [],
-    sidePanelOpen: true,
-    chatPanelMode: 'shared',
-    interactionMode: 'select',
-  });
-}
-
-function setupTwoNodesWithEdge() {
-  const id1 = useDiagramStore.getState().addNode({ x: 0, y: 0 });
-  const id2 = useDiagramStore.getState().addNode({ x: 0, y: 200 });
-  useDiagramStore.getState().addEdge(id1, id2);
-  const edgeId = useDiagramStore.getState().diagram.edges[0].id;
-  return { id1, id2, edgeId };
-}
+import { addTestNodes, addTwoConnectedTestNodes, resetDiagramAndUIStores } from '../../test/store-fixtures';
 
 describe('diagram-store-edge-actions', () => {
   beforeEach(() => {
-    resetStore();
+    resetDiagramAndUIStores();
   });
 
   describe('deleteEdges', () => {
     it('removes an edge by id', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
       expect(useDiagramStore.getState().diagram.edges).toHaveLength(1);
 
       useDiagramStore.getState().deleteEdges([edgeId]);
@@ -42,9 +18,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('removes multiple edges', () => {
-      const id1 = useDiagramStore.getState().addNode({ x: 0, y: 0 });
-      const id2 = useDiagramStore.getState().addNode({ x: 0, y: 200 });
-      const id3 = useDiagramStore.getState().addNode({ x: 0, y: 400 });
+      const [id1, id2, id3] = addTestNodes(3, 200);
       useDiagramStore.getState().addEdge(id1, id2);
       useDiagramStore.getState().addEdge(id2, id3);
       const edges = useDiagramStore.getState().diagram.edges;
@@ -56,7 +30,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('preserves nodes when deleting edges', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().deleteEdges([edgeId]);
 
@@ -64,7 +38,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('enables undo after deleting edges', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().deleteEdges([edgeId]);
 
@@ -74,7 +48,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('ignores non-existent edge ids', () => {
-      setupTwoNodesWithEdge();
+      addTwoConnectedTestNodes();
 
       useDiagramStore.getState().deleteEdges(['non-existent-id']);
 
@@ -84,7 +58,7 @@ describe('diagram-store-edge-actions', () => {
 
   describe('setEdgeConfidence', () => {
     it('sets confidence to medium', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().setEdgeConfidence(edgeId, 'medium');
 
@@ -93,7 +67,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('sets confidence to low', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().setEdgeConfidence(edgeId, 'low');
 
@@ -101,7 +75,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('tracks history for undo', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().setEdgeConfidence(edgeId, 'low');
 
@@ -167,7 +141,7 @@ describe('diagram-store-edge-actions', () => {
 
   describe('setEdgeTag', () => {
     it('sets an edge tag', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().setEdgeTag(edgeId, 'critical');
 
@@ -175,7 +149,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('clears edge tag when given empty string', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().setEdgeTag(edgeId, 'critical');
       useDiagramStore.getState().setEdgeTag(edgeId, '');
@@ -184,7 +158,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('tracks history for undo', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().setEdgeTag(edgeId, 'critical');
       useDiagramStore.getState().undo();
@@ -195,7 +169,7 @@ describe('diagram-store-edge-actions', () => {
 
   describe('updateEdgeNotes', () => {
     it('sets notes on an edge without tracking history', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
       // Reset undo state
       useDiagramStore.setState({ canUndo: false, canRedo: false });
 
@@ -207,7 +181,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('clears notes when given empty string', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().updateEdgeNotes(edgeId, 'Some notes');
       useDiagramStore.getState().updateEdgeNotes(edgeId, '');
@@ -218,7 +192,7 @@ describe('diagram-store-edge-actions', () => {
 
   describe('commitEdgeNotes', () => {
     it('commits notes with history tracking', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().commitEdgeNotes(edgeId, 'Final notes');
 
@@ -227,7 +201,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('undoes committed notes', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().commitEdgeNotes(edgeId, 'Final notes');
       useDiagramStore.getState().undo();
@@ -236,7 +210,7 @@ describe('diagram-store-edge-actions', () => {
     });
 
     it('clears notes when committing empty string', () => {
-      const { edgeId } = setupTwoNodesWithEdge();
+      const { edgeId } = addTwoConnectedTestNodes();
 
       useDiagramStore.getState().commitEdgeNotes(edgeId, 'Some text');
       useDiagramStore.getState().commitEdgeNotes(edgeId, '');

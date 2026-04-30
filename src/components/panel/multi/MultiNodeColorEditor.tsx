@@ -4,18 +4,13 @@ import { useDiagramStore } from '../../../store/diagram-store';
 import { rememberRecentColor } from '../../../store/color-history-store';
 import ColorPickerSection from '../../shared/ColorPickerSection';
 import { colorsMatch } from '../../shared/color-utils';
+import { getNodeIds, getSharedNodeColor } from '../../shared/node-selection';
 
 interface Props {
   selectedNodes: DiagramNode[];
 }
 
 type ColorKind = 'background' | 'text';
-
-function sharedColor(nodes: DiagramNode[], key: 'color' | 'textColor'): string | undefined {
-  if (nodes.length === 0) return undefined;
-  const first = nodes[0].data[key];
-  return nodes.every((n) => colorsMatch(n.data[key], first)) ? first : undefined;
-}
 
 function useBulkColorHandler(
   kind: ColorKind,
@@ -67,9 +62,9 @@ function useBulkColorHandler(
 }
 
 function MultiNodeColorEditor({ selectedNodes }: Props) {
-  const ids = selectedNodes.map((n) => n.id);
-  const currentBg = sharedColor(selectedNodes, 'color');
-  const currentText = sharedColor(selectedNodes, 'textColor');
+  const ids = getNodeIds(selectedNodes);
+  const currentBg = getSharedNodeColor(selectedNodes, 'color');
+  const currentText = getSharedNodeColor(selectedNodes, 'textColor');
   const bg = useBulkColorHandler('background', ids, currentBg);
   const text = useBulkColorHandler('text', ids, currentText);
 

@@ -4,12 +4,11 @@ import type {
   DiagramEdge,
   DiagramNode,
   DiagramSettings,
-  EdgePolarity,
   JunctionType,
 } from '../core/types';
 import type { Framework } from '../core/framework-types';
 import type { BatchMutations } from './diagram-store-types';
-import { resolveEdgeSides } from './diagram-edge-routing';
+import { applyTargetJunctionDefault, buildDiagramEdge } from './diagram-edge-factory';
 
 export function batchAddNodes(
   mutations: BatchMutations,
@@ -108,34 +107,20 @@ export function batchAddEdges(
     });
     if (!result.valid) continue;
 
-    const routingSides = settings.edgeRoutingMode === 'fixed'
-      ? resolveEdgeSides(source, target, nodes, settings)
-      : {};
-
-    edges.push({
-      id: crypto.randomUUID(),
+    edges.push(buildDiagramEdge({
       source,
       target,
-      ...routingSides,
-      ...(edge.confidence && edge.confidence !== 'high'
-        ? { confidence: edge.confidence }
-        : {}),
-      ...(framework.supportsEdgePolarity
-        ? { polarity: edge.polarity ?? ('positive' as EdgePolarity) }
-        : {}),
-      ...(framework.supportsEdgeDelay && edge.delay ? { delay: true } : {}),
-      ...(edge.notes ? { notes: edge.notes } : {}),
-    });
+      framework,
+      nodes,
+      settings,
+      confidence: edge.confidence,
+      polarity: edge.polarity,
+      delay: edge.delay || undefined,
+      notes: edge.notes,
+      includeDefaultFields: false,
+    }));
 
-    const incomingCount = edges.filter((existing) => existing.target === target).length;
-    if (framework.supportsJunctions && incomingCount === 2) {
-      const defaultJunction = getDefaultJunctionType(framework) as JunctionType;
-      nodes = nodes.map((node) =>
-        node.id === target
-          ? { ...node, data: { ...node.data, junctionType: defaultJunction } }
-          : node,
-      );
-    }
+    nodes = applyTargetJunctionDefault(nodes, edges, target, framework);
   }
 
   return { nodes, edges };

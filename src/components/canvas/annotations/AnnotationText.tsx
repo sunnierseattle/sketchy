@@ -1,7 +1,8 @@
 import { memo, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { NodeResizer, type NodeProps } from '@xyflow/react';
+import { type NodeProps } from '@xyflow/react';
 import { useDiagramStore } from '../../../store/diagram-store';
-import { ANNOTATION_STROKE, annotationHandleStyle, annotationResizeLineStyle } from './annotation-style';
+import { ANNOTATION_STROKE } from './annotation-style';
+import AnnotationResizer from './AnnotationResizer';
 
 interface AnnotationTextData {
   kind: 'text';
@@ -17,7 +18,6 @@ function AnnotationText({ id, data, selected }: NodeProps) {
   const [draft, setDraft] = useState(d.text ?? '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const commitAnnotationData = useDiagramStore((s) => s.commitAnnotationData);
-  const resizeAnnotation = useDiagramStore((s) => s.resizeAnnotation);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -47,19 +47,11 @@ function AnnotationText({ id, data, selected }: NodeProps) {
 
   return (
     <>
-      <NodeResizer
+      <AnnotationResizer
+        id={id}
         isVisible={!!selected && !editing}
         minWidth={60}
         minHeight={20}
-        color="var(--accent)"
-        handleStyle={annotationHandleStyle}
-        lineStyle={annotationResizeLineStyle}
-        onResizeEnd={(_, p) =>
-          resizeAnnotation(id, {
-            size: { width: p.width, height: p.height },
-            position: { x: p.x, y: p.y },
-          })
-        }
       />
       <div
         data-testid={`annotation-text-${id}`}
