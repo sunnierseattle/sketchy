@@ -43,7 +43,7 @@ interface ProjectJunction {
   sources: string[];
 }
 
-export interface ProjectJson {
+interface ProjectJson {
   name?: string;
   framework?: string;
   direction?: Diagram['settings']['layoutDirection'];
