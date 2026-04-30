@@ -3,6 +3,7 @@ import type { NodeTag } from '../../../core/framework-types';
 import type { DiagramNode } from '../../../core/types';
 import { useDiagramStore } from '../../../store/diagram-store';
 import FormField from '../../form/FormField';
+import { getNodeIds, getNodeTagStats } from '../../shared/node-selection';
 
 interface Props {
   selectedNodes: DiagramNode[];
@@ -48,17 +49,14 @@ function SelectionTagsEditor({ selectedNodes, availableTags }: Props) {
     );
   }
 
-  const ids = selectedNodes.map((node) => node.id);
+  const ids = getNodeIds(selectedNodes);
   const total = selectedNodes.length;
+  const tagStats = getNodeTagStats(selectedNodes, availableTags);
 
   return (
     <FormField label="Tags">
       <div className="section-stack gap-tight">
-        {availableTags.map((tag) => {
-          const count = selectedNodes.filter((node) => node.data.tags.includes(tag.id)).length;
-          const allHave = count === total;
-          const noneHave = count === 0;
-
+        {tagStats.map(({ tag, count, allHave, noneHave }) => {
           return (
             <div
               key={tag.id}

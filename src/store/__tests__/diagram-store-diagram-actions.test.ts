@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useDiagramStore } from '../diagram-store';
-import { useUIStore } from '../ui-store';
 import { getFramework } from '../../frameworks/registry';
+import { resetDiagramAndUIStores } from '../../test/store-fixtures';
 
 vi.mock('../../core/layout/run-elk-auto-layout', () => ({
   runElkAutoLayout: vi.fn().mockResolvedValue([
@@ -9,20 +9,8 @@ vi.mock('../../core/layout/run-elk-auto-layout', () => ({
   ]),
 }));
 
-function resetStore() {
-  useDiagramStore.getState().setFramework('crt');
-  useDiagramStore.getState().newDiagram();
-  useDiagramStore.setState((s) => ({ diagram: { ...s.diagram, nodes: [], edges: [] } }));
-  useUIStore.setState({
-    selectedNodeIds: [],
-    selectedEdgeIds: [],
-    selectedLoopId: null,
-    contextMenu: null,
-  });
-}
-
 describe('diagram actions', () => {
-  beforeEach(resetStore);
+  beforeEach(() => resetDiagramAndUIStores());
 
   describe('batchApply', () => {
     it('adds nodes via batch mutations', () => {

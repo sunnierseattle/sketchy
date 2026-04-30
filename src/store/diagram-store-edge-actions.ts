@@ -1,16 +1,14 @@
 import { DEFAULT_EDGE_ROUTING_CONFIG, DEFAULT_EDGE_ROUTING_POLICY } from '../core/edge-routing';
 import { findExistingEdge, validateEdge } from '../core/graph/validation';
-import {
-  getDefaultEdgeFields,
-  resolveFramework,
-} from './diagram-framework';
+import { resolveFramework } from './diagram-framework';
 import {
   resolveEdgeSides,
   captureOptimizedEdgeSides,
 } from './diagram-edge-routing';
-import { getDefaultJunctionType, type Framework } from '../core/framework-types';
-import type { DiagramEdge, JunctionType } from '../core/types';
+import { type Framework } from '../core/framework-types';
+import type { DiagramEdge } from '../core/types';
 import type { DiagramState, DiagramStoreContext } from './diagram-store-types';
+import { applyTargetJunctionDefault, buildDiagramEdge } from './diagram-edge-factory';
 
 function createEdgeRoutingConfig(framework: Framework) {
   return framework.allowsCycles
@@ -93,32 +91,22 @@ export function createDiagramEdgeActions(
 
       pushHistorySnapshot();
 
-      const edge: DiagramEdge = {
-        id: crypto.randomUUID(),
+      const edge: DiagramEdge = buildDiagramEdge({
         source,
         target,
-        ...(state.diagram.settings.edgeRoutingMode === 'fixed'
-          ? resolveEdgeSides(source, target, state.diagram.nodes, state.diagram.settings, handles)
-          : {}),
-        ...getDefaultEdgeFields(framework),
-      };
-
-      const targetIncomingCount =
-        state.diagram.edges.filter((existingEdge) => existingEdge.target === target).length + 1;
+        framework,
+        nodes: state.diagram.nodes,
+        settings: state.diagram.settings,
+        handles,
+      });
 
       set((storeState) => {
-        let nodes = storeState.diagram.nodes;
-        if (framework.supportsJunctions && targetIncomingCount === 2) {
-          const defaultJunction = getDefaultJunctionType(framework) as JunctionType;
-          nodes = nodes.map((node) =>
-            node.id === target ? { ...node, data: { ...node.data, junctionType: defaultJunction } } : node,
-          );
-        }
+        const edges = [...storeState.diagram.edges, edge];
         return {
           diagram: {
             ...storeState.diagram,
-            nodes,
-            edges: [...storeState.diagram.edges, edge],
+            nodes: applyTargetJunctionDefault(storeState.diagram.nodes, edges, target, framework),
+            edges,
           },
           ...undoState,
         };

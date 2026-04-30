@@ -6,25 +6,15 @@ import { useDiagramStore } from '../../../store/diagram-store';
 import { useChatStore } from '../../../store/chat-store';
 import { useUIStore } from '../../../store/ui-store';
 import type { DiagramNode } from '../../../core/types';
+import { resetDiagramAndUIStores } from '../../../test/store-fixtures';
 
 function resetStores() {
-  useDiagramStore.getState().setFramework('crt');
-  useDiagramStore.getState().newDiagram();
+  resetDiagramAndUIStores();
   useChatStore.setState({
     messages: [],
     loading: false,
     streamingContent: '',
     aiModifiedNodeIds: new Set(),
-  });
-  useUIStore.setState({
-    selectedNodeIds: [],
-    selectedEdgeIds: [],
-    selectedLoopId: null,
-    contextMenu: null,
-    toasts: [],
-    sidePanelOpen: true,
-    chatPanelMode: 'shared',
-    interactionMode: 'select',
   });
 }
 
