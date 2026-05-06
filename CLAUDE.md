@@ -1,4 +1,4 @@
-# Sketchy
+# Clarity
 
 A web-based thinking-frameworks diagram editor focused on structured reasoning. Frameworks are auto-discovered from `src/frameworks/*.json` — see that directory for the current list (as of this writing: CLD, CRT, Evaporating Cloud, FRT, Goal Tree, Issue Tree, Org Structure, PRT, STT, Success Tree, Team Topology, Value Stream, VDT).
 

@@ -106,7 +106,7 @@ export function buildSystemPrompt(diagram: Diagram, framework: Framework): strin
     : '';
   const loopSection = loopAnalysis ? `\n${loopAnalysis}\n` : '';
 
-  return `You are an AI assistant for Sketchy, a thinking-frameworks diagram editor.
+  return `You are an AI assistant for Clarity, a thinking-frameworks diagram editor.
 
 The user is working on a "${framework.name}" diagram called "${diagram.name}".
 ${framework.description}

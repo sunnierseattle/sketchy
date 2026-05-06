@@ -51,7 +51,7 @@ export default function App() {
       <Toaster
         position="bottom-center"
         duration={4000}
-        toastOptions={{ className: 'sketchy-toast' }}
+        toastOptions={{ className: 'clarity-toast' }}
       />
     </ReactFlowProvider>
   );

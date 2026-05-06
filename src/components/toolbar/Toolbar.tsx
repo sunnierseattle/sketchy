@@ -53,7 +53,7 @@ export default function Toolbar() {
     <header className="app-header">
       <div className="toolbar-group">
         <img src="/mascot.svg" alt="" className="app-mascot" />
-        <h1 className="app-title">Sketchy <span className="app-version">v{appVersion}</span></h1>
+        <h1 className="app-title">Clarity <span className="app-version">v{appVersion}</span></h1>
         <div className="toolbar-divider" />
         <FrameworkSelector />
       </div>

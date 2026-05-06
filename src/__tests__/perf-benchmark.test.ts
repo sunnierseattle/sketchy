@@ -1,5 +1,5 @@
 /**
- * Performance benchmarks for critical Sketchy workflows.
+ * Performance benchmarks for critical Clarity workflows.
  *
  * Each test generates diagrams of increasing size (small / medium / large)
  * and records execution time + memory.  Assertions enforce hard ceilings
