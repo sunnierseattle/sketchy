@@ -1,6 +1,6 @@
-# Sketchy
+# Clarity
 
-Sketchy is a browser-based editor for structured thinking diagrams. It is designed around Theory of Constraints style cause-and-effect work rather than generic whiteboarding.
+Clarity is a browser-based editor for structured thinking diagrams. It is designed around Theory of Constraints style cause-and-effect work rather than generic whiteboarding.
 
 Today the app supports:
 
@@ -16,9 +16,9 @@ Today the app supports:
 - `.json` project save/load, plus in-session autosave
 - Auto-layout, undo/redo, edge confidence, notes, and framework-specific tags
 
-## Why Sketchy
+## Why Clarity
 
-Sketchy's core model is intentionally narrow:
+Clarity's core model is intentionally narrow:
 
 - Diagrams are directed graphs with framework-specific semantics
 - Nodes share a common base shape and are enriched by tags, notes, and derived indicators
@@ -70,7 +70,7 @@ Use Value Stream Map to trace how work moves through a delivery flow, where it w
 
 ## Recommended Next Frameworks
 
-The strongest near-term additions are frameworks that fit the current engine without turning Sketchy into a generic diagrammer.
+The strongest near-term additions are frameworks that fit the current engine without turning Clarity into a generic diagrammer.
 
 1. `Evaporating Cloud (EC)`
 2. `Transition Tree`
@@ -109,7 +109,7 @@ npx vitest run
 
 ## Firebase Error Logging
 
-Sketchy can forward uncaught browser errors and React crash boundary failures to Firebase Analytics as `exception` events and persist them to Firestore with the current app version attached.
+Clarity can forward uncaught browser errors and React crash boundary failures to Firebase Analytics as `exception` events and persist them to Firestore with the current app version attached.
 
 Add these Vite env vars before running the app:
 
@@ -133,7 +133,7 @@ If the Firebase config is missing, the logger stays disabled and the app behaves
 
 ## AI Integration
 
-Sketchy can analyze and modify the current diagram through the side-panel chat.
+Clarity can analyze and modify the current diagram through the side-panel chat.
 
 - Configure API key, model, and endpoint from the toolbar settings popover
 - OpenAI-compatible endpoints are supported
@@ -141,4 +141,4 @@ Sketchy can analyze and modify the current diagram through the side-panel chat.
 
 ## Project Status
 
-The app is already beyond the original CRT-only concept. The next product question is not whether Sketchy should support more diagram types in general, but which additional thinking frameworks deepen the existing workflow without breaking its constraints.
+The app is already beyond the original CRT-only concept. The next product question is not whether Clarity should support more diagram types in general, but which additional thinking frameworks deepen the existing workflow without breaking its constraints.

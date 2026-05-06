@@ -15,7 +15,7 @@ test('app boots without uncaught console errors and renders the toolbar', async 
 
   await expect(page.locator('[data-testid="diagram-flow"]')).toBeVisible();
   await expect(page.locator('.app-header')).toBeVisible();
-  await expect(page.locator('.app-title')).toContainText('Sketchy');
+  await expect(page.locator('.app-title')).toContainText('Clarity');
 
   // Filter out known-benign messages that aren't bundle/runtime regressions:
   // ResizeObserver noise and Vite's HMR favicon warnings during dev.

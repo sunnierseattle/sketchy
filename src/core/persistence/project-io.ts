@@ -38,7 +38,7 @@ export async function saveProjectFile(diagram: Diagram): Promise<void> {
         suggestedName: defaultFilename(diagram),
         types: [
           {
-            description: 'Sketchy Project',
+            description: 'Clarity Project',
             accept: { 'application/json': ['.json'] },
           },
         ],
@@ -93,7 +93,7 @@ export async function loadProjectFile(file: File): Promise<LoadResult> {
   } else {
     const legacyDiagram = migrateDiagramShape(parsed);
     if (!legacyDiagram) {
-      throw new Error('Unrecognized file format. Expected a Sketchy .json project file.');
+      throw new Error('Unrecognized file format. Expected a Clarity .json project file.');
     }
     diagram = legacyDiagram;
   }
