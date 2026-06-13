@@ -117,6 +117,16 @@ describe('Toolbar', () => {
     confirmSpy.mockRestore();
   });
 
+  it('references the mascot through the configured base URL so it resolves under a subpath', () => {
+    render(<Toolbar />);
+
+    const mascot = document.querySelector('img.app-mascot') as HTMLImageElement;
+    expect(mascot).not.toBeNull();
+    // BASE_URL is '/' in tests, but the src must be built from it (not a hardcoded
+    // '/mascot.svg') so a GitHub Pages '/sketchy/' base resolves correctly.
+    expect(mascot.getAttribute('src')).toBe(`${import.meta.env.BASE_URL}mascot.svg`);
+  });
+
   it('switches frameworks through the toolbar selector and clears chat state', async () => {
     const user = userEvent.setup();
     useChatStore.setState({
