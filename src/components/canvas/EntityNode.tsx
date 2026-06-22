@@ -88,7 +88,8 @@ function EntityNode({ id, data, selected }: NodeProps) {
   const isConnectionSourceNode = isConnectionInProgress && connection.fromHandle.nodeId === id;
 
   const degreesMap = nodeData.degreesMap as Map<string, { indegree: number; outdegree: number }> | undefined;
-  const derived = degreesMap
+  // Derived indicators are auto-generated tags — hidden alongside user tags when showTags is off.
+  const derived = showTags && degreesMap
     ? getDerivedIndicators(id, degreesMap, framework.derivedIndicators)
     : [];
   const degrees = degreesMap?.get(id) ?? { indegree: 0, outdegree: 0 };
