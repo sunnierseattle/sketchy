@@ -92,6 +92,17 @@ export default function SettingsPopover() {
             <div className="toggle-thumb" />
           </button>
         </div>
+        <div className="control-row split-row">
+          <p className="section-label">Show Tags</p>
+          <button
+            className="toggle-track"
+            data-active={diagramSettings.showTags}
+            onClick={() => updateDiagramSettings({ showTags: !diagramSettings.showTags })}
+            aria-label="Toggle tags"
+          >
+            <div className="toggle-thumb" />
+          </button>
+        </div>
       </div>
       <div className="settings-divider" />
 

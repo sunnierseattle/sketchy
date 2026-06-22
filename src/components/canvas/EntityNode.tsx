@@ -81,6 +81,7 @@ function EntityNode({ id, data, selected }: NodeProps) {
   const commitNodeText = useDiagramStore((s) => s.commitNodeText);
   const updateNodeJunction = useDiagramStore((s) => s.updateNodeJunction);
   const framework = useFramework();
+  const showTags = useDiagramStore((s) => s.diagram.settings.showTags);
   const isAiModified = useChatStore((s) => s.aiModifiedNodeIds.has(id));
   const connection = useConnection();
   const isConnectionInProgress = connection.inProgress;
@@ -141,9 +142,11 @@ function EntityNode({ id, data, selected }: NodeProps) {
   );
 
   // Determine accent color: user tags > derived indicators > default
-  const tagColors = nodeData.tags
-    .map((t) => framework.nodeTags.find((nt) => nt.id === t))
-    .filter(Boolean);
+  const tagColors = showTags
+    ? nodeData.tags
+        .map((t) => framework.nodeTags.find((nt) => nt.id === t))
+        .filter(Boolean)
+    : [];
   const accentColor = tagColors.length > 0
     ? tagColors[0]!.color
     : derived.length > 0

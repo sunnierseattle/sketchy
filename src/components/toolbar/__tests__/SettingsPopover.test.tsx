@@ -77,6 +77,16 @@ describe('SettingsPopover', () => {
     expect(useDiagramStore.getState().diagram.settings.snapToGrid).toBe(true);
   });
 
+  it('toggles tag visibility', async () => {
+    const user = userEvent.setup();
+    render(<SettingsPopover />);
+
+    const tagsToggle = screen.getByLabelText('Toggle tags');
+    const initialShowTags = useDiagramStore.getState().diagram.settings.showTags;
+    await user.click(tagsToggle);
+    expect(useDiagramStore.getState().diagram.settings.showTags).toBe(!initialShowTags);
+  });
+
   it('changes layout direction', async () => {
     const user = userEvent.setup();
     render(<SettingsPopover />);

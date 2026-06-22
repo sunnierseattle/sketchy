@@ -72,6 +72,7 @@ function normalizeSettings(raw: unknown): DiagramSettings {
     layoutDirection,
     showGrid: typeof s.showGrid === 'boolean' ? s.showGrid : true,
     snapToGrid: typeof s.snapToGrid === 'boolean' ? s.snapToGrid : false,
+    showTags: typeof s.showTags === 'boolean' ? s.showTags : true,
     edgeRoutingMode,
   };
 }
