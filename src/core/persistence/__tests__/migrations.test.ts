@@ -175,6 +175,7 @@ describe('migrations', () => {
         layoutDirection: 'BT',
         showGrid: true,
         snapToGrid: false,
+        showTags: true,
         edgeRoutingMode: 'dynamic',
       });
     });
@@ -195,6 +196,7 @@ describe('migrations', () => {
         layoutDirection: 'LR',
         showGrid: true,
         snapToGrid: false,
+        showTags: true,
         edgeRoutingMode: 'dynamic',
       });
     });
@@ -220,6 +222,7 @@ describe('migrations', () => {
         layoutDirection: 'BT',
         showGrid: true,
         snapToGrid: false,
+        showTags: true,
         edgeRoutingMode: 'dynamic',
       });
     });

@@ -83,6 +83,31 @@ describe('getDerivedIndicators', () => {
   });
 });
 
+describe('Org Structure derived indicators', () => {
+  // Edges mean "X reports to Y" (source reports to target). So the top boss
+  // reports to no one (outdegree 0) and a leaf IC has no reports (indegree 0).
+  const indicators = getFramework('org-structure')!.derivedIndicators;
+
+  // ceo <- manager <- ic  (ic reports to manager, manager reports to ceo)
+  const edges = [edge('ic', 'manager'), edge('manager', 'ceo')];
+  const degrees = computeNodeDegrees(edges);
+
+  it('marks the top boss (reports to no one) as Top Leadership, not IC', () => {
+    const result = getDerivedIndicators('ceo', degrees, indicators);
+    expect(result.map((i) => i.id)).toEqual(['top-leadership']);
+  });
+
+  it('marks a leaf (no direct reports) as Individual Contributor, not Top', () => {
+    const result = getDerivedIndicators('ic', degrees, indicators);
+    expect(result.map((i) => i.id)).toEqual(['individual-contributor']);
+  });
+
+  it('marks a node with reports above and below as Manager', () => {
+    const result = getDerivedIndicators('manager', degrees, indicators);
+    expect(result.map((i) => i.id)).toEqual(['manager']);
+  });
+});
+
 describe('getConnectedSubgraph', () => {
   it('returns only selected node when no edges', () => {
     const result = getConnectedSubgraph([], 'a');

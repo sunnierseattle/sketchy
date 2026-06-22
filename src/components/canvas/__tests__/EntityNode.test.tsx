@@ -36,6 +36,7 @@ function resetStores() {
     fromHandle: null,
   };
   useDiagramStore.getState().setFramework('crt');
+  useDiagramStore.getState().updateSettings({ showTags: true });
   useChatStore.setState({
     aiModifiedNodeIds: new Set(),
   });
@@ -164,6 +165,29 @@ describe('EntityNode', () => {
     it('does not render badge container when no tags and no derived', () => {
       renderNode();
       expect(document.querySelector('.entity-node-badges')).toBeNull();
+    });
+
+    it('hides tag badges when showTags is disabled', () => {
+      useDiagramStore.getState().updateSettings({ showTags: false });
+      renderNode({ tags: ['ude'] });
+      expect(screen.queryByText('UDE')).toBeNull();
+      expect(document.querySelector('.entity-node-badges')).toBeNull();
+    });
+
+    it('still renders derived badges when showTags is disabled', () => {
+      useDiagramStore.getState().updateSettings({ showTags: false });
+      const degreesMap = new Map([['n1', { indegree: 0, outdegree: 1 }]]);
+      renderNode({ tags: ['ude'], degreesMap });
+      expect(screen.queryByText('UDE')).toBeNull();
+      expect(screen.getByText('Roo')).toBeInTheDocument();
+    });
+
+    it('falls back to derived accent color when showTags is disabled', () => {
+      useDiagramStore.getState().updateSettings({ showTags: false });
+      const degreesMap = new Map([['n1', { indegree: 0, outdegree: 1 }]]);
+      renderNode({ tags: ['ude'], degreesMap });
+      const accent = document.querySelector('.entity-node-accent') as HTMLElement;
+      expect(accent.style.backgroundColor).toBe('rgb(92, 141, 181)'); // derived, not UDE
     });
   });
 

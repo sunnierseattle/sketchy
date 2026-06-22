@@ -50,6 +50,7 @@ interface ProjectJson {
   direction?: Diagram['settings']['layoutDirection'];
   showGrid?: boolean;
   snapToGrid?: boolean;
+  showTags?: boolean;
   edgeRoutingMode?: Diagram['settings']['edgeRoutingMode'];
   version?: number;
   createdAt?: string;
@@ -147,6 +148,7 @@ export function convertProjectJson(data: ProjectJson): { diagram: Diagram; needs
       layoutDirection: data.direction ?? 'BT',
       showGrid: data.showGrid ?? true,
       snapToGrid: data.snapToGrid ?? false,
+      showTags: data.showTags ?? true,
       edgeRoutingMode: data.edgeRoutingMode ?? 'dynamic',
     },
     nodes,
@@ -215,6 +217,7 @@ export function diagramToProjectJson(diagram: Diagram): ProjectJson {
     direction: diagram.settings.layoutDirection,
     showGrid: diagram.settings.showGrid,
     snapToGrid: diagram.settings.snapToGrid,
+    showTags: diagram.settings.showTags,
     edgeRoutingMode: diagram.settings.edgeRoutingMode,
     version: diagram.schemaVersion,
     createdAt: new Date().toISOString(),

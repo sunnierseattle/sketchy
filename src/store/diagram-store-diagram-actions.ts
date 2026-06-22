@@ -187,6 +187,7 @@ export function createDiagramActions(
         layoutDirection: diagram.settings.layoutDirection,
         showGrid: diagram.settings.showGrid,
         snapToGrid: diagram.settings.snapToGrid ?? false,
+        showTags: diagram.settings.showTags ?? true,
         edgeRoutingMode: diagram.settings.edgeRoutingMode ?? 'dynamic',
       };
       set({

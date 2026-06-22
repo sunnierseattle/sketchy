@@ -130,6 +130,12 @@ describe('diagram actions', () => {
       useDiagramStore.getState().updateSettings({ layoutDirection: 'LR' });
       expect(useDiagramStore.getState().diagram.settings.layoutDirection).toBe('LR');
     });
+
+    it('toggles tag visibility', () => {
+      expect(useDiagramStore.getState().diagram.settings.showTags).toBe(true);
+      useDiagramStore.getState().updateSettings({ showTags: false });
+      expect(useDiagramStore.getState().diagram.settings.showTags).toBe(false);
+    });
   });
 
   describe('loadDiagram', () => {

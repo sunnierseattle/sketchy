@@ -55,7 +55,7 @@
       "name": "Top Leadership",
       "shortName": "Top",
       "color": "#5C8DB5",
-      "condition": "indegree-zero",
+      "condition": "leaf",
       "description": "No one above — the top of the reporting chain"
     },
     {
@@ -71,7 +71,7 @@
       "name": "Individual Contributor",
       "shortName": "IC",
       "color": "#26A69A",
-      "condition": "leaf",
+      "condition": "indegree-zero",
       "description": "No direct reports — an end-of-chain role"
     }
   ]
