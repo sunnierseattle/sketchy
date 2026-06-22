@@ -6,6 +6,7 @@ export type ThemeId =
   | 'midnight'
   | 'nord'
   | 'ocean'
+  | 'paper'
   | 'rose'
   | 'sky-light'
   | 'solarized-light'
@@ -140,6 +141,17 @@ export const THEMES: ThemeDefinition[] = [
     shadow: '0 20px 45px rgba(0, 0, 0, 0.35)',
     headerBg: 'rgba(27, 40, 56, 0.92)', toggleThumb: '#E8EEF4',
     edgeLabelBg: 'rgba(36, 52, 71, 0.92)', minimapFallback: '#3A5068',
+  }),
+  createTheme('paper', 'Paper', {
+    appBgTop: '#FFFFFF', appBgBottom: '#FFFFFF',
+    surface: '#FFFFFF', surfaceMuted: '#F4F4F5',
+    border: '#E4E4E7', borderStrong: '#D4D4D8',
+    text: '#18181B', textMuted: '#52525B', textSoft: '#A1A1AA',
+    accent: '#2563EB', accentHover: '#1D4ED8', accentShadow: 'rgba(37, 99, 235, 0.2)',
+    secondary: '#F4F4F5', secondaryHover: '#E4E4E7',
+    shadow: '0 20px 45px rgba(0, 0, 0, 0.08)',
+    headerBg: 'rgba(255, 255, 255, 0.85)', toggleThumb: '#ffffff',
+    edgeLabelBg: 'rgba(255, 255, 255, 0.92)', minimapFallback: '#E4E4E7',
   }),
   createTheme('rose', 'Rose', {
     appBgTop: '#FFF5F5', appBgBottom: '#FEE2E2',
