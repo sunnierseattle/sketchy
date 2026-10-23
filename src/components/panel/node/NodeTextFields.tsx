@@ -49,7 +49,7 @@ function NodeTextFields({ nodeId, label, notes }: Props) {
           onBlur={handleTextBlur}
           onKeyDown={handleEnterBlur}
           rows={3}
-          placeholder="Enter text..."
+          placeholder="Text… (Markdown · Shift+Enter for a new line)"
           aria-label="Node text"
         />
       </FormField>

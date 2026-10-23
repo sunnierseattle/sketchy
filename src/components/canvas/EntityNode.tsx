@@ -12,6 +12,7 @@ import {
 import type { CardinalHandleSide, EdgeHandleSide as HandleSide } from '../../core/types';
 import { useTouchNodeEditing } from '../../hooks/useTouchNodeEditing';
 import { useHandleProximity } from '../../hooks/useHandleProximity';
+import NodeMarkdown from './NodeMarkdown';
 
 interface EntityNodeData {
   label: string;
@@ -237,11 +238,13 @@ function EntityNode({ id, data, selected }: NodeProps) {
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             rows={Math.max(1, text.split('\n').length)}
-            placeholder="Enter text..."
+            placeholder="Text… (Markdown · Shift+Enter for a new line)"
           />
         ) : (
           <div className="entity-node-label" style={nodeData.textColor ? { color: nodeData.textColor } : undefined}>
-            {nodeData.label || (
+            {nodeData.label ? (
+              <NodeMarkdown content={nodeData.label} />
+            ) : (
               <span style={{ color: 'var(--text-soft)', fontStyle: 'italic' }}>
                 Double-tap or double-click to edit
               </span>

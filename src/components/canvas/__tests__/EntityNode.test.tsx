@@ -108,6 +108,35 @@ describe('EntityNode', () => {
       renderNode({ label: '' });
       expect(screen.getByText('Double-tap or double-click to edit')).toBeInTheDocument();
     });
+
+    it('renders markdown bold as <strong>', () => {
+      renderNode({ label: 'a **bold** word' });
+      const strong = document.querySelector('.entity-node-label strong');
+      expect(strong).not.toBeNull();
+      expect(strong!.textContent).toBe('bold');
+    });
+
+    it('renders a markdown bullet list', () => {
+      renderNode({ label: '- one\n- two' });
+      const items = document.querySelectorAll('.entity-node-label li');
+      expect(items).toHaveLength(2);
+      expect(items[0].textContent).toBe('one');
+      expect(items[1].textContent).toBe('two');
+    });
+
+    it('preserves single newlines as line breaks (the reported bug)', () => {
+      // "a\nb\nc" must render across three lines, not collapse to "a b c".
+      renderNode({ label: 'a\nb\nc' });
+      const breaks = document.querySelectorAll('.entity-node-label br');
+      expect(breaks).toHaveLength(2);
+    });
+
+    it('does not render raw HTML in labels', () => {
+      renderNode({ label: '<b>x</b>' });
+      // Raw HTML is escaped/ignored, not parsed into a <b> element.
+      expect(document.querySelector('.entity-node-label b')).toBeNull();
+      expect(screen.getByText('<b>x</b>')).toBeInTheDocument();
+    });
   });
 
   describe('accent color', () => {

@@ -57,6 +57,42 @@
   word-wrap: break-word;
 }
 
+/* Markdown rendering inside a node: keep it compact — no block margins, tight
+   lists — so formatted labels still read like a single label, not a document. */
+.entity-node-label :where(p, ul, ol, h1, h2, h3, h4, h5, h6, blockquote, pre) {
+  margin: 0;
+}
+.entity-node-label :where(p, ul, ol) + :where(p, ul, ol, h1, h2, h3, h4, h5, h6, blockquote, pre) {
+  margin-top: 0.35em;
+}
+.entity-node-label :where(ul, ol) {
+  padding-left: 1.1em;
+}
+.entity-node-label :where(h1, h2, h3, h4, h5, h6) {
+  font-size: 1em;
+  font-weight: 700;
+}
+.entity-node-label code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  padding: 0.05em 0.3em;
+  border-radius: 3px;
+}
+.entity-node-label pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.entity-node-label a {
+  color: var(--accent, #5C8DB5);
+  text-decoration: underline;
+}
+.entity-node-label blockquote {
+  padding-left: 0.6em;
+  border-left: 2px solid var(--border);
+  color: var(--text-muted);
+}
+
 .entity-node-value {
   font-size: 0.75rem;
   font-weight: 600;
