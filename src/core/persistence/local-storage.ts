@@ -40,8 +40,8 @@ export function loadDiagram(): LoadResult {
 
     const normalized = normalizeLoadedDiagram(
       diagram,
-      (droppedCount) =>
-        `Recovered session contained errors and was sanitized: removed ${droppedCount} invalid connection(s).`,
+      (droppedCount, details) =>
+        `Recovered session contained errors and was sanitized: removed ${droppedCount} invalid connection(s) (${details}).`,
     );
 
     return {

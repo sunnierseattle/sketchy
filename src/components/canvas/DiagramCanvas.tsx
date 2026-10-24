@@ -50,11 +50,11 @@ export default function DiagramCanvas() {
   const interactionMode = useUIStore((s) => s.interactionMode);
 
   // Highlighting logic (extracted hook)
-  const { selectedLoop, highlightSets, degreesMap } = useCanvasHighlighting();
+  const { selectedLoop, highlightSets, degreesMap, selectedDiagramNodeIds } = useCanvasHighlighting();
 
   // Build RF nodes/edges (extracted hook)
   const { rfNodes, rfEdges, defaultEdgeOptions, activeTheme } = useRFNodeEdgeBuilder(
-    highlightSets, selectedLoop, degreesMap,
+    highlightSets, selectedLoop, degreesMap, selectedDiagramNodeIds,
   );
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -184,6 +184,9 @@ export default function DiagramCanvas() {
         <MiniMap
           pannable
           zoomable
+          bgColor="var(--surface)"
+          maskColor="color-mix(in srgb, var(--app-bg-top) 65%, transparent)"
+          maskStrokeColor="var(--border-strong)"
           nodeColor={(node) => {
             const data = node.data as { tags?: string[]; color?: string };
             if (data?.color) return data.color;

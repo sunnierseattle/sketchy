@@ -16,9 +16,12 @@ interface CanvasHighlighting {
   selectedLoop: NamedCausalLoop | null;
   highlightSets: ConnectedSubgraph | null;
   degreesMap: Map<string, NodeDegrees>;
+  /** Selected diagram nodes only; selected annotations never drive highlighting. */
+  selectedDiagramNodeIds: string[];
 }
 
 export function useCanvasHighlighting(): CanvasHighlighting {
+  const nodes = useDiagramStore((s) => s.diagram.nodes);
   const edges = useDiagramStore((s) => s.diagram.edges);
   const framework = useFramework();
   const selectedNodeIds = useUIStore((s) => s.selectedNodeIds);
@@ -26,6 +29,12 @@ export function useCanvasHighlighting(): CanvasHighlighting {
   const selectedLoopId = useUIStore((s) => s.selectedLoopId);
 
   const degreesMap = useMemo(() => computeNodeDegrees(edges), [edges]);
+
+  const selectedDiagramNodeIds = useMemo(() => {
+    const nodeIds = new Set(nodes.map((n) => n.id));
+    const filtered = selectedNodeIds.filter((id) => nodeIds.has(id));
+    return filtered.length === selectedNodeIds.length ? selectedNodeIds : filtered;
+  }, [nodes, selectedNodeIds]);
 
   const selectedLoop = useMemo(() => {
     if (!framework.allowsCycles || !selectedLoopId) return null;
@@ -35,10 +44,10 @@ export function useCanvasHighlighting(): CanvasHighlighting {
 
   const highlightSets = useMemo(() => {
     if (selectedLoop) return getLoopSubgraph(selectedLoop);
-    if (selectedNodeIds.length === 1) {
-      return getConnectedSubgraph(edges, selectedNodeIds[0]);
+    if (selectedDiagramNodeIds.length === 1) {
+      return getConnectedSubgraph(edges, selectedDiagramNodeIds[0]);
     }
-    if (selectedEdgeIds.length === 1 && selectedNodeIds.length === 0) {
+    if (selectedEdgeIds.length === 1 && selectedDiagramNodeIds.length === 0) {
       const edge = edges.find((e) => e.id === selectedEdgeIds[0]);
       if (edge) {
         return {
@@ -48,7 +57,7 @@ export function useCanvasHighlighting(): CanvasHighlighting {
       }
     }
     return null;
-  }, [selectedLoop, selectedNodeIds, selectedEdgeIds, edges]);
+  }, [selectedLoop, selectedDiagramNodeIds, selectedEdgeIds, edges]);
 
-  return { selectedLoop, highlightSets, degreesMap };
+  return { selectedLoop, highlightSets, degreesMap, selectedDiagramNodeIds };
 }

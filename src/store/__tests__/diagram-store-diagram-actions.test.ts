@@ -116,6 +116,43 @@ describe('diagram actions', () => {
       useDiagramStore.getState().setFramework('frt');
       expect(useDiagramStore.getState().canUndo).toBe(true);
     });
+
+    it('undo restores the previous framework and its settings, not just the content', () => {
+      const store = useDiagramStore.getState();
+      store.addNode({ x: 0, y: 0 });
+      const before = useDiagramStore.getState().diagram;
+
+      store.setFramework('cld');
+      useDiagramStore.getState().undo();
+
+      const after = useDiagramStore.getState().diagram;
+      expect(after.frameworkId).toBe('crt');
+      expect(after.settings.layoutDirection).toBe(before.settings.layoutDirection);
+      expect(after.nodes).toHaveLength(1);
+    });
+
+    it('redo re-applies the framework switch', () => {
+      const store = useDiagramStore.getState();
+      store.addNode({ x: 0, y: 0 });
+      store.setFramework('cld');
+      const switched = useDiagramStore.getState().diagram;
+
+      useDiagramStore.getState().undo();
+      useDiagramStore.getState().redo();
+
+      const after = useDiagramStore.getState().diagram;
+      expect(after.frameworkId).toBe('cld');
+      expect(after.settings.layoutDirection).toBe(switched.settings.layoutDirection);
+      expect(after.nodes).toHaveLength(0);
+    });
+
+    it('undoing a later edit keeps settings changed after that edit', () => {
+      const store = useDiagramStore.getState();
+      store.addNode({ x: 0, y: 0 });
+      store.updateSettings({ snapToGrid: true });
+      useDiagramStore.getState().undo();
+      expect(useDiagramStore.getState().diagram.settings.snapToGrid).toBe(true);
+    });
   });
 
   describe('updateSettings', () => {

@@ -152,4 +152,74 @@ describe('normalizeLoadedDiagram', () => {
     expect(result.diagram.edges).toHaveLength(3);
     expect(result.warnings).toEqual([]);
   });
+
+  const entity = (id: string, label = id) => ({
+    id, type: 'entity' as const, position: { x: 0, y: 0 }, data: { label, tags: [], junctionType: 'or' as const },
+  });
+  const detailWarning = (count: number, details: string) => `Dropped ${count}: ${details}`;
+
+  it('explains a dropped cycle instead of blaming missing nodes', () => {
+    const diagram = createEmptyDiagram('crt');
+    diagram.nodes = [entity('n1'), entity('n2')];
+    diagram.edges = [
+      { id: 'e1', source: 'n1', target: 'n2' },
+      { id: 'e2', source: 'n2', target: 'n1' },
+    ];
+
+    const result = normalizeLoadedDiagram(diagram, detailWarning);
+
+    expect(result.warnings).toEqual(['Dropped 1: 1 would create a cycle']);
+  });
+
+  it('summarizes mixed drop reasons', () => {
+    const diagram = createEmptyDiagram('crt');
+    diagram.nodes = [entity('n1'), entity('n2')];
+    diagram.edges = [
+      { id: 'e1', source: 'n1', target: 'n2' },
+      { id: 'e2', source: 'n1', target: 'ghost' },
+      { id: 'e3', source: 'n2', target: 'ghost' },
+      { id: 'e4', source: 'n1', target: 'n2' },
+    ];
+
+    const result = normalizeLoadedDiagram(diagram, detailWarning);
+
+    expect(result.warnings).toEqual(['Dropped 3: 2 pointed to a missing node, 1 duplicate']);
+  });
+
+  it('drops nodes with a repeated ID, keeping the first, and warns', () => {
+    const diagram = createEmptyDiagram('crt');
+    diagram.nodes = [entity('n1', 'first'), entity('n2'), entity('n1', 'second copy')];
+    diagram.edges = [{ id: 'e1', source: 'n1', target: 'n2' }];
+
+    const result = normalizeLoadedDiagram(diagram, detailWarning);
+
+    expect(result.diagram.nodes.map((n) => n.data.label)).toEqual(['first', 'n2']);
+    expect(result.diagram.edges).toHaveLength(1);
+    expect(result.warnings).toEqual(['Removed 1 node(s) with a duplicate ID.']);
+  });
+
+  it('drops annotations with a repeated ID', () => {
+    const diagram = createEmptyDiagram('crt');
+    const annotation = { id: 'a1', kind: 'text' as const, position: { x: 0, y: 0 }, size: { width: 10, height: 10 }, data: {} };
+    diagram.annotations = [annotation, { ...annotation }];
+
+    const result = normalizeLoadedDiagram(diagram, detailWarning);
+
+    expect(result.diagram.annotations).toHaveLength(1);
+    expect(result.warnings).toEqual(['Removed 1 annotation(s) with a duplicate ID.']);
+  });
+
+  it('drops connections with a repeated ID even when their endpoints differ', () => {
+    const diagram = createEmptyDiagram('crt');
+    diagram.nodes = [entity('n1'), entity('n2'), entity('n3')];
+    diagram.edges = [
+      { id: 'e1', source: 'n1', target: 'n2' },
+      { id: 'e1', source: 'n2', target: 'n3' },
+    ];
+
+    const result = normalizeLoadedDiagram(diagram, detailWarning);
+
+    expect(result.diagram.edges).toEqual([{ id: 'e1', source: 'n1', target: 'n2' }]);
+    expect(result.warnings).toEqual(['Removed 1 connection(s) with a duplicate ID.']);
+  });
 });

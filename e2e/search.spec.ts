@@ -83,3 +83,16 @@ test('search with no matches dims all nodes', async ({ page }) => {
   await expect(page.locator('.entity-node.dimmed')).toHaveCount(2);
   await expect(page.locator('.entity-node.highlighted')).toHaveCount(0);
 });
+
+test('search matches the text a node shows, not its hidden markdown', async ({ page }) => {
+  await createNode(page, 100, 100);
+  const [nodeId] = await getNodeIds(page);
+  await updateNodeText(page, nodeId, '**Revenue** [report](https://example.com/q3)');
+
+  const searchInput = page.locator('[data-testid="search-bar"] input');
+  await searchInput.fill('example.com');
+  await expect(page.locator('.entity-node.dimmed')).toHaveCount(1);
+
+  await searchInput.fill('revenue report');
+  await expect(page.locator('.entity-node.highlighted')).toHaveCount(1);
+});

@@ -5,6 +5,7 @@ import type { DiagramNode, JunctionType } from '../../core/types';
 import type { NodeDegrees } from '../../core/graph/derived';
 import { useDiagramStore } from '../../store/diagram-store';
 import type { DiagramSnapshot } from '../../store/diagram-store-types';
+import { snapshot } from '../../store/diagram-snapshot';
 import { rememberRecentColor } from '../../store/color-history-store';
 import ColorPickerSection from '../shared/ColorPickerSection';
 import {
@@ -63,12 +64,7 @@ export default function MultiNodeContextMenu({
 
   const captureSnapshotOnce = useCallback(() => {
     if (preStateRef.current) return;
-    const diagram = useDiagramStore.getState().diagram;
-    preStateRef.current = {
-      nodes: diagram.nodes,
-      edges: diagram.edges,
-      annotations: diagram.annotations,
-    };
+    preStateRef.current = snapshot(useDiagramStore.getState());
   }, []);
 
   const setBackgroundColor = useCallback((color: string | undefined) => {

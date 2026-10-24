@@ -11,7 +11,7 @@ import {
   ensureFixedEdgeSides,
   captureOptimizedEdgeSides,
 } from './diagram-edge-routing';
-import { snapshot } from './diagram-snapshot';
+import { restoreSnapshot, snapshot } from './diagram-snapshot';
 import {
   batchAddNodes,
   batchUpdateNodes,
@@ -227,12 +227,7 @@ export function createDiagramActions(
       const prev = history.undo(snapshot(state));
       if (prev) {
         set((storeState) => ({
-          diagram: {
-            ...storeState.diagram,
-            nodes: prev.nodes,
-            edges: prev.edges,
-            annotations: prev.annotations,
-          },
+          diagram: restoreSnapshot(storeState.diagram, prev),
           canUndo: history.canUndo,
           canRedo: history.canRedo,
         }));
@@ -245,12 +240,7 @@ export function createDiagramActions(
       const next = history.redo(snapshot(state));
       if (next) {
         set((storeState) => ({
-          diagram: {
-            ...storeState.diagram,
-            nodes: next.nodes,
-            edges: next.edges,
-            annotations: next.annotations,
-          },
+          diagram: restoreSnapshot(storeState.diagram, next),
           canUndo: history.canUndo,
           canRedo: history.canRedo,
         }));

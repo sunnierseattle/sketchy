@@ -19,11 +19,15 @@ function NodeMarkdown({ content }: Props) {
       disallowedElements={['img']}
       unwrapDisallowed
       components={{
-        a: ({ children, href }) => (
+        // react-markdown blanks unsafe URLs (e.g. javascript:); show those as
+        // text rather than a link that would just reopen the app.
+        a: ({ children, href }) => (href ? (
           <a href={href} target="_blank" rel="noreferrer" className="nodrag">
             {children}
           </a>
-        ),
+        ) : (
+          <span>{children}</span>
+        )),
       }}
     >
       {content}

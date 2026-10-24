@@ -68,6 +68,17 @@
 .entity-node-label :where(ul, ol) {
   padding-left: 1.1em;
 }
+/* Tailwind's base reset removes list markers; bring them back for node text. */
+.entity-node-label ul {
+  list-style: disc;
+}
+.entity-node-label ol {
+  list-style: decimal;
+}
+.entity-node-label ul.contains-task-list {
+  list-style: none;
+  padding-left: 0;
+}
 .entity-node-label :where(h1, h2, h3, h4, h5, h6) {
   font-size: 1em;
   font-weight: 700;

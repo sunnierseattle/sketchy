@@ -4,6 +4,7 @@ import { useDiagramStore, useFramework } from '../../store/diagram-store';
 import { getJunctionOptions } from '../../core/framework-types';
 import FormField from '../form/FormField';
 import ButtonGroup from '../form/ButtonGroup';
+import { nodeDisplayLabel } from '../../core/text/plain-text';
 
 interface Props {
   edge: DiagramEdge;
@@ -56,7 +57,8 @@ export default function EdgePanel({ edge }: Props) {
 
       <FormField label="Connection">
         <p className="field-label">
-          {sourceNode?.data.label ?? 'Unknown'} &rarr; {targetNode?.data.label ?? 'Unknown'}
+          {sourceNode ? nodeDisplayLabel(sourceNode.data.label) : 'Unknown'} &rarr;{' '}
+          {targetNode ? nodeDisplayLabel(targetNode.data.label) : 'Unknown'}
         </p>
       </FormField>
 

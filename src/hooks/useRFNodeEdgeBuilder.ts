@@ -3,6 +3,7 @@ import { MarkerType, type Edge, type Node } from '@xyflow/react';
 import { DEFAULT_EDGE_ROUTING_CONFIG, DEFAULT_EDGE_ROUTING_POLICY } from '../core/edge-routing';
 import { useDiagramStore, useFramework } from '../store/diagram-store';
 import { useUIStore } from '../store/ui-store';
+import { markdownToPlainText } from '../core/text/plain-text';
 import { useSettingsStore } from '../store/settings-store';
 import { getSourceHandleId, getTargetHandleId } from '../core/graph/ports';
 import {
@@ -63,6 +64,7 @@ export function useRFNodeEdgeBuilder(
   highlightSets: ConnectedSubgraph | null,
   selectedLoop: NamedCausalLoop | null,
   degreesMap: Map<string, NodeDegrees>,
+  selectedDiagramNodeIds: string[],
 ): BuilderResult {
   const nodes = useDiagramStore((s) => s.diagram.nodes);
   const edges = useDiagramStore((s) => s.diagram.edges);
@@ -70,7 +72,6 @@ export function useRFNodeEdgeBuilder(
   const settings = useDiagramStore((s) => s.diagram.settings);
   const framework = useFramework();
   const edgeRoutingMode = settings?.edgeRoutingMode ?? 'dynamic';
-  const selectedNodeIds = useUIStore((s) => s.selectedNodeIds);
   const selectedEdgeIds = useUIStore((s) => s.selectedEdgeIds);
   const searchQuery = useUIStore((s) => s.searchQuery);
   const themeId = useSettingsStore((s) => s.theme);
@@ -100,10 +101,10 @@ export function useRFNodeEdgeBuilder(
   const highlightCtx = useMemo(() => ({
     searchLower,
     highlightSets,
-    selectedNodeIds,
+    selectedNodeIds: selectedDiagramNodeIds,
     selectedEdgeIds,
     selectedLoopId: selectedLoop?.id ?? null,
-  }), [searchLower, highlightSets, selectedNodeIds, selectedEdgeIds, selectedLoop]);
+  }), [searchLower, highlightSets, selectedDiagramNodeIds, selectedEdgeIds, selectedLoop]);
 
   const rfNodes: Node[] = useMemo(
     () => [
@@ -116,7 +117,7 @@ export function useRFNodeEdgeBuilder(
         data: {
           ...n.data,
           degreesMap,
-          highlightState: computeNodeHighlightState(n.id, n.data.label, highlightCtx),
+          highlightState: computeNodeHighlightState(n.id, markdownToPlainText(n.data.label), highlightCtx),
           loopKind: selectedLoop && highlightSets?.nodeIds.has(n.id)
             ? selectedLoop.kind
             : undefined,

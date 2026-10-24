@@ -133,4 +133,16 @@ describe('validateGraph', () => {
     expect(result.valid).toBe(true);
     expect(result.droppedEdges).toHaveLength(0);
   });
+  it('reports why each edge was dropped', () => {
+    const nodes = [node('a'), node('b')];
+    const edges = [
+      edge('1', 'a', 'b'),
+      edge('2', 'a', 'ghost'),
+      edge('3', 'a', 'a'),
+      edge('4', 'a', 'b'),
+      edge('5', 'b', 'a'),
+    ];
+    const result = validateGraph(nodes, edges);
+    expect(result.dropReasons).toEqual(['missing-node', 'self-loop', 'duplicate', 'cycle']);
+  });
 });

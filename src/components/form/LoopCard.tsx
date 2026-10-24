@@ -49,7 +49,7 @@ export default function LoopCard({ loop, selected, onSelect, nodeLabels }: Props
         )}
       </div>
       <p className="field-label">
-        {loop.nodeIds.map((nodeId) => nodeLabels.get(nodeId) ?? nodeId).join(' \u2192 ')}
+        {loop.nodeIds.map((nodeId) => nodeLabels.get(nodeId) ?? 'Unknown').join(' \u2192 ')}
       </p>
     </button>
   );

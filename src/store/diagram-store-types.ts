@@ -61,6 +61,8 @@ export interface DiagramSnapshot {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
   annotations: Annotation[];
+  frameworkId: string;
+  settings: DiagramSettings;
 }
 
 export interface NodePositionChange {

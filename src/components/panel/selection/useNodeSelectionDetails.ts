@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { DiagramNode } from '../../../core/types';
 import { useDiagramStore, useFramework } from '../../../store/diagram-store';
 import { useGraphDerivations } from '../../../hooks/useGraphDerivations';
+import { nodeDisplayLabel } from '../../../core/text/plain-text';
 
 export function useNodeSelectionDetails(selectedNodes: DiagramNode[]) {
   const framework = useFramework();
@@ -17,7 +18,7 @@ export function useNodeSelectionDetails(selectedNodes: DiagramNode[]) {
     [selectedNodes],
   );
   const nodeLabels = useMemo(
-    () => new Map(nodes.map((node) => [node.id, node.data.label || node.id])),
+    () => new Map(nodes.map((node) => [node.id, nodeDisplayLabel(node.data.label)])),
     [nodes],
   );
 

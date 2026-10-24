@@ -40,6 +40,27 @@ describe('loadProjectFile', () => {
     expect(result.warnings).toHaveLength(0);
   });
 
+  it('says why a connection was dropped when it would create a cycle', async () => {
+    const diagram = makeDiagram();
+    diagram.edges.push({ id: 'e2', source: 'n2', target: 'n1' });
+
+    const result = await loadProjectFile(makeFile(JSON.stringify(diagram)));
+
+    expect(result.warnings).toEqual([
+      'File contained errors and was sanitized: removed 1 invalid connection(s) (1 would create a cycle).',
+    ]);
+  });
+
+  it('removes duplicate node IDs and reports it', async () => {
+    const diagram = makeDiagram();
+    diagram.nodes.push({ ...diagram.nodes[0], position: { x: 50, y: 50 } });
+
+    const result = await loadProjectFile(makeFile(JSON.stringify(diagram)));
+
+    expect(result.diagram.nodes.map((n) => n.id)).toEqual(['n1', 'n2']);
+    expect(result.warnings).toEqual(['Removed 1 node(s) with a duplicate ID.']);
+  });
+
   it('rejects invalid JSON', async () => {
     await expect(loadProjectFile(makeFile('not json'))).rejects.toThrow(
       'not valid JSON',

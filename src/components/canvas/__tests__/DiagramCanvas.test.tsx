@@ -10,6 +10,7 @@ import type { EdgeChange, NodeChange } from '@xyflow/react';
 
 const mocks = vi.hoisted(() => ({
   degreesMap: new Map(),
+  selectedDiagramNodeIds: [] as string[],
   highlightSets: { nodes: new Set<string>(), edges: new Set<string>() },
   rfNodes: [] as never[],
   rfEdges: [] as never[],
@@ -280,6 +281,7 @@ vi.mock('../../../hooks/useCanvasHighlighting', () => ({
     selectedLoop: null,
     highlightSets: mocks.highlightSets,
     degreesMap: mocks.degreesMap,
+    selectedDiagramNodeIds: mocks.selectedDiagramNodeIds,
   }),
 }));
 
@@ -480,6 +482,7 @@ describe('DiagramCanvas', () => {
       mocks.highlightSets,
       null,
       mocks.degreesMap,
+      mocks.selectedDiagramNodeIds,
     );
   });
 

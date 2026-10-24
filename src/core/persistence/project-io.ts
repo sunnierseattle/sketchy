@@ -100,8 +100,8 @@ export async function loadProjectFile(file: File): Promise<LoadResult> {
 
   const normalized = normalizeLoadedDiagram(
     diagram,
-    (droppedCount) =>
-      `File contained errors and was sanitized: removed ${droppedCount} invalid connection(s) referencing non-existent nodes.`,
+    (droppedCount, details) =>
+      `File contained errors and was sanitized: removed ${droppedCount} invalid connection(s) (${details}).`,
   );
 
   return {

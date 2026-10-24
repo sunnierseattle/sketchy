@@ -98,10 +98,11 @@ function hasCycle(edges: DiagramEdge[]): boolean {
   return false;
 }
 
-interface ValidationResult {
-  valid: boolean;
-  reason?: string;
-}
+export type EdgeDropReason = 'missing-node' | 'self-loop' | 'duplicate' | 'cycle';
+
+type ValidationResult =
+  | { valid: true }
+  | { valid: false; reason: string; code: Exclude<EdgeDropReason, 'missing-node'> };
 
 export function validateEdge(
   edges: DiagramEdge[],
@@ -110,13 +111,13 @@ export function validateEdge(
   options: GraphValidationOptions = {},
 ): ValidationResult {
   if (isSelfLoop(source, target)) {
-    return { valid: false, reason: 'Cannot connect a node to itself' };
+    return { valid: false, reason: 'Cannot connect a node to itself', code: 'self-loop' };
   }
   if (isDuplicateEdge(edges, source, target)) {
-    return { valid: false, reason: 'Connection already exists' };
+    return { valid: false, reason: 'Connection already exists', code: 'duplicate' };
   }
   if (!options.allowCycles && hasCycle([...edges, { id: '__validation__', source, target }])) {
-    return { valid: false, reason: 'Cannot connect: would create a cycle' };
+    return { valid: false, reason: 'Cannot connect: would create a cycle', code: 'cycle' };
   }
   return { valid: true };
 }
@@ -124,7 +125,8 @@ export function validateEdge(
 interface GraphValidationResult {
   valid: boolean;
   droppedEdges: DiagramEdge[];
-  reasons: string[];
+  /** Why each dropped edge was rejected, index-aligned with droppedEdges. */
+  dropReasons: EdgeDropReason[];
 }
 
 export function validateGraph(
@@ -135,15 +137,13 @@ export function validateGraph(
   const nodeIds = new Set(nodes.map((n) => n.id));
   const validEdges: DiagramEdge[] = [];
   const droppedEdges: DiagramEdge[] = [];
-  const reasons: string[] = [];
+  const dropReasons: EdgeDropReason[] = [];
 
   for (const edge of edges) {
     // Check that both endpoints exist
     if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) {
       droppedEdges.push(edge);
-      reasons.push(
-        `Edge ${edge.id}: references non-existent node`,
-      );
+      dropReasons.push('missing-node');
       continue;
     }
 
@@ -152,13 +152,13 @@ export function validateGraph(
       validEdges.push(edge);
     } else {
       droppedEdges.push(edge);
-      reasons.push(`Edge ${edge.id}: ${result.reason}`);
+      dropReasons.push(result.code);
     }
   }
 
   return {
     valid: droppedEdges.length === 0,
     droppedEdges,
-    reasons,
+    dropReasons,
   };
 }

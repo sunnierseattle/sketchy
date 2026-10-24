@@ -50,6 +50,23 @@ describe('SettingsPanel', () => {
     expect(screen.getByText('Causal Loop Diagram')).toBeInTheDocument();
   });
 
+  it('lists loop members as plain text and never shows raw IDs', () => {
+    const store = useDiagramStore.getState();
+    const a = store.addNode({ x: 0, y: 0 });
+    const b = store.addNode({ x: 150, y: 0 });
+    store.updateNodeText(a, '**Demand** [link](https://example.com)');
+    store.addEdge(a, b);
+    store.addEdge(b, a);
+
+    render(<SettingsPanel />);
+
+    const loopButton = screen.getByRole('button', { name: /R1/i });
+    expect(loopButton).toHaveTextContent('Demand link');
+    expect(loopButton).toHaveTextContent('Untitled');
+    expect(loopButton).not.toHaveTextContent('**');
+    expect(loopButton).not.toHaveTextContent(b);
+  });
+
   it('shows loop summary badges and toggles loop selection', async () => {
     const user = userEvent.setup();
     const { loopId } = buildReinforcingLoop();

@@ -137,6 +137,21 @@ describe('EntityNode', () => {
       expect(document.querySelector('.entity-node-label b')).toBeNull();
       expect(screen.getByText('<b>x</b>')).toBeInTheDocument();
     });
+
+    it('renders safe links as new-tab links that do not start a drag', () => {
+      renderNode({ label: '[docs](https://example.com)' });
+      const link = document.querySelector('.entity-node-label a')!;
+      expect(link.getAttribute('href')).toBe('https://example.com');
+      expect(link.getAttribute('target')).toBe('_blank');
+      expect(link.getAttribute('rel')).toBe('noreferrer');
+      expect(link.classList.contains('nodrag')).toBe(true);
+    });
+
+    it('renders unsafe links as plain text instead of an empty link', () => {
+      renderNode({ label: '[bad](javascript:alert(1)) ok' });
+      expect(document.querySelector('.entity-node-label a')).toBeNull();
+      expect(document.querySelector('.entity-node-label')!.textContent).toContain('bad');
+    });
   });
 
   describe('accent color', () => {

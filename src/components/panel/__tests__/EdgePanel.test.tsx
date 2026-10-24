@@ -33,6 +33,16 @@ describe('EdgePanel', () => {
     expect(screen.getByText(/Target Node/)).toBeInTheDocument();
   });
 
+  it('shows plain-text endpoint labels and Untitled for empty ones', () => {
+    const [source, target] = useDiagramStore.getState().diagram.nodes;
+    useDiagramStore.getState().updateNodeText(source.id, '**Bold** source');
+    useDiagramStore.getState().updateNodeText(target.id, '');
+
+    render(<EdgePanel edge={getEdge(edgeId)} />);
+
+    expect(screen.getByText(/Bold source → Untitled/)).toBeInTheDocument();
+  });
+
   it('changes confidence level', async () => {
     const user = userEvent.setup();
     render(<EdgePanel edge={getEdge(edgeId)} />);

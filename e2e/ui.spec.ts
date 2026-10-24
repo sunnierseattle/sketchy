@@ -180,3 +180,19 @@ test('pressing Escape in the node color menu discards pending colors', async ({ 
   });
   expect(storedColor).toBeUndefined();
 });
+
+test('minimap follows the theme instead of staying white', async ({ page }) => {
+  await createNode(page, 100, 100);
+  const colors = await page.evaluate(() => {
+    const minimap = document.querySelector('.react-flow__minimap')!;
+    const surface = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+    const probe = document.createElement('div');
+    probe.style.color = surface;
+    document.body.appendChild(probe);
+    const surfaceRgb = getComputedStyle(probe).color;
+    probe.remove();
+    return { minimap: getComputedStyle(minimap).backgroundColor, surfaceRgb };
+  });
+  expect(colors.minimap).not.toBe('rgb(255, 255, 255)');
+  expect(colors.minimap).toBe(colors.surfaceRgb);
+});

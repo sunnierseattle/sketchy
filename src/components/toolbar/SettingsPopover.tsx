@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { useSettingsStore, PROVIDERS } from '../../store/settings-store';
 import { formatModelDate } from '../../core/ai/model-fetcher';
 import { THEMES, type ThemeId } from '../../styles/themes';
@@ -49,6 +50,8 @@ export default function SettingsPopover() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open, closeSettings]);
+
+  useHotkeys('escape', closeSettings, { enabled: open, enableOnFormTags: true }, [closeSettings]);
 
   if (!open) return null;
 

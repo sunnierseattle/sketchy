@@ -139,4 +139,18 @@ describe('SettingsPopover', () => {
     fireEvent.mouseDown(document.body);
     expect(useSettingsStore.getState().settingsOpen).toBe(false);
   });
+
+  it('closes on Escape', () => {
+    render(<SettingsPopover />);
+    fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' });
+    expect(useSettingsStore.getState().settingsOpen).toBe(false);
+  });
+
+  it('closes on Escape even when focus is inside the popover', () => {
+    render(<SettingsPopover />);
+    const themeSelect = screen.getByLabelText('Theme');
+    themeSelect.focus();
+    fireEvent.keyDown(themeSelect, { key: 'Escape', code: 'Escape' });
+    expect(useSettingsStore.getState().settingsOpen).toBe(false);
+  });
 });

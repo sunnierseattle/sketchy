@@ -3,6 +3,7 @@ import { useDiagramStore, useFramework } from '../../store/diagram-store';
 import { useUIStore } from '../../store/ui-store';
 import { findCausalLoops, labelCausalLoops, summarizeCausalLoops } from '../../core/graph/derived';
 import LoopCard from '../form/LoopCard';
+import { nodeDisplayLabel } from '../../core/text/plain-text';
 
 export default function SettingsPanel() {
   const nodes = useDiagramStore((s) => s.diagram.nodes);
@@ -17,7 +18,10 @@ export default function SettingsPanel() {
     [edges, framework.allowsCycles],
   );
   const loopSummary = summarizeCausalLoops(loops);
-  const nodeLabels = new Map(nodes.map((node) => [node.id, node.data.label || node.id]));
+  const nodeLabels = useMemo(
+    () => new Map(nodes.map((node) => [node.id, nodeDisplayLabel(node.data.label)])),
+    [nodes],
+  );
   const [nameDraft, setNameDraft] = useState(diagramName);
 
   useEffect(() => {

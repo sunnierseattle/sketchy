@@ -168,6 +168,21 @@ describe('NodePanel', () => {
       await user.click(loopButton);
       expect(useUIStore.getState().selectedLoopId).toBeNull();
     });
+
+    it('shows unnamed loop members as Untitled and strips markdown', () => {
+      useDiagramStore.getState().updateNodeText(nodeId, '# **Demand**');
+      const otherId = useDiagramStore.getState().addNode({ x: 100, y: 0 });
+      useDiagramStore.getState().addEdge(nodeId, otherId);
+      useDiagramStore.getState().addEdge(otherId, nodeId);
+
+      render(<NodePanel node={getNode(nodeId)} />);
+
+      const loopButton = screen.getByRole('button', { name: /R1/i });
+      expect(loopButton).toHaveTextContent('Demand');
+      expect(loopButton).toHaveTextContent('Untitled');
+      expect(loopButton).not.toHaveTextContent(otherId);
+      expect(loopButton).not.toHaveTextContent('**');
+    });
   });
 
   describe('value/unit fields (VDT)', () => {
