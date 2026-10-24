@@ -193,7 +193,19 @@ export const MAX_CYCLE_LENGTH = 30;
 /** Maximum total loops to collect before stopping (prevents combinatorial explosion). */
 export const MAX_TOTAL_LOOPS = 200;
 
+export interface CausalLoopSearch {
+  loops: CausalLoop[];
+  /** True when the diagram has more than MAX_TOTAL_LOOPS loops and the list was cut off. */
+  truncated: boolean;
+}
+
 export function findCausalLoops(edges: DiagramEdge[]): CausalLoop[] {
+  return findCausalLoopsWithStatus(edges).loops;
+}
+
+export function findCausalLoopsWithStatus(edges: DiagramEdge[]): CausalLoopSearch {
+  // Search one past the cap so "exactly the cap" and "more than the cap" differ.
+  const limit = MAX_TOTAL_LOOPS + 1;
   const nodeIds = getUniqueNodeIds(edges);
   const components = findStronglyConnectedComponents(nodeIds, edges)
     .filter((component) => component.length >= 2);
@@ -233,10 +245,10 @@ export function findCausalLoops(edges: DiagramEdge[]): CausalLoop[] {
       visited: Set<string>,
     ) {
       if (pathNodes.length > MAX_CYCLE_LENGTH) return;
-      if (loops.size >= MAX_TOTAL_LOOPS) return;
+      if (loops.size >= limit) return;
 
       for (const edge of outgoing.get(currentId) ?? []) {
-        if (loops.size >= MAX_TOTAL_LOOPS) return;
+        if (loops.size >= limit) return;
 
         const nextId = edge.target;
         if (!componentSet.has(nextId)) continue;
@@ -259,16 +271,17 @@ export function findCausalLoops(edges: DiagramEdge[]): CausalLoop[] {
     }
 
     for (const startId of component) {
-      if (loops.size >= MAX_TOTAL_LOOPS) break;
+      if (loops.size >= limit) break;
       dfs(startId, startId, [startId], [], new Set([startId]));
     }
   }
 
-  return Array.from(loops.values()).sort((a, b) => {
+  const sorted = Array.from(loops.values()).sort((a, b) => {
     if (a.kind !== b.kind) return a.kind === 'reinforcing' ? -1 : 1;
     if (a.nodeIds.length !== b.nodeIds.length) return a.nodeIds.length - b.nodeIds.length;
     return a.nodeIds.join('>').localeCompare(b.nodeIds.join('>'));
   });
+  return { loops: sorted.slice(0, MAX_TOTAL_LOOPS), truncated: sorted.length > MAX_TOTAL_LOOPS };
 }
 
 export function summarizeCausalLoops(loops: CausalLoop[]): LoopSummary {

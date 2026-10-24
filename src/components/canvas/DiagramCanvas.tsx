@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   ReactFlow,
   Background,
@@ -16,10 +16,11 @@ import AnnotationLine from './annotations/AnnotationLine';
 import AnnotationText from './annotations/AnnotationText';
 import { useDiagramStore, useFramework } from '../../store/diagram-store';
 import { useUIStore } from '../../store/ui-store';
-import { FIT_VIEW_OPTIONS } from '../../core/layout/fit-view-options';
-import { getDerivedIndicators } from '../../core/graph/derived';
+import { FIT_VIEW_OPTIONS, MIN_ZOOM } from '../../core/layout/fit-view-options';
 import { useCanvasHighlighting } from '../../hooks/useCanvasHighlighting';
 import { useRFNodeEdgeBuilder } from '../../hooks/useRFNodeEdgeBuilder';
+import { useMinimapNodeColor } from '../../hooks/useMinimapNodeColor';
+import { registerMeasuringCanvas } from '../../store/node-measurement';
 import { useViewportFocus } from '../../hooks/useViewportFocus';
 import { useTouchGestures } from '../../hooks/useTouchGestures';
 import { useCanvasHandlers } from '../../hooks/useCanvasHandlers';
@@ -56,6 +57,9 @@ export default function DiagramCanvas() {
   const { rfNodes, rfEdges, defaultEdgeOptions, activeTheme } = useRFNodeEdgeBuilder(
     highlightSets, selectedLoop, degreesMap, selectedDiagramNodeIds,
   );
+  const minimapNodeColor = useMinimapNodeColor(framework, degreesMap, activeTheme.js.minimapFallback);
+  // While mounted, this canvas measures nodes, so auto-layout can wait for real sizes.
+  useEffect(() => registerMeasuringCanvas(), []);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const updateNodeInternals = useUpdateNodeInternals();
@@ -164,6 +168,7 @@ export default function DiagramCanvas() {
         onPaneClick={handlers.onPaneClick}
         fitView
         fitViewOptions={FIT_VIEW_OPTIONS}
+        minZoom={MIN_ZOOM}
         deleteKeyCode={['Backspace', 'Delete']}
         multiSelectionKeyCode="Shift"
         selectionOnDrag={interactionConfig.selectionOnDrag}
@@ -187,17 +192,7 @@ export default function DiagramCanvas() {
           bgColor="var(--surface)"
           maskColor="color-mix(in srgb, var(--app-bg-top) 65%, transparent)"
           maskStrokeColor="var(--border-strong)"
-          nodeColor={(node) => {
-            const data = node.data as { tags?: string[]; color?: string };
-            if (data?.color) return data.color;
-            const tagColor = data?.tags
-              ?.map((t) => framework.nodeTags.find((nt) => nt.id === t))
-              .find(Boolean)?.color;
-            if (tagColor) return tagColor;
-            const derived = getDerivedIndicators(node.id, degreesMap, framework.derivedIndicators);
-            if (derived.length > 0) return derived[0].color;
-            return activeTheme.js.minimapFallback;
-          }}
+          nodeColor={minimapNodeColor}
         />
       </ReactFlow>
     </div>

@@ -301,3 +301,68 @@ describe('autoLayout (ELK)', () => {
     ).rejects.toThrow('java.lang.NullPointerException');
   });
 });
+
+describe('autoLayout parent centering', () => {
+  const shapes: Record<string, [string, string][]> = {
+    'first child has a subtree': [['r', 'a'], ['r', 'b'], ['r', 'c'], ['a', 'a1'], ['a', 'a2'], ['a', 'a3']],
+    'two children, first is bushy': [['r', 'a'], ['r', 'b'], ['a', 'a1'], ['a', 'a2'], ['a', 'a3'], ['a', 'a4']],
+    'last child has a subtree': [['r', 'a'], ['r', 'b'], ['r', 'c'], ['r', 'd'], ['d', 'd1'], ['d', 'd2'], ['d', 'd3']],
+    'middle child has a subtree': [['r', 'a'], ['r', 'b'], ['r', 'c'], ['b', 'b1'], ['b', 'b2'], ['b', 'b3'], ['b', 'b4'], ['b', 'b5']],
+  };
+
+  it.each(Object.entries(shapes))('centers the root over its children: %s', async (_name, pairs) => {
+    const ids = [...new Set(pairs.flat())];
+    const edges = pairs.map(([s, t]) => edge(s, t));
+    const result = await autoLayout(ids.map(node), edges, { direction: 'TB' }, elkEngine);
+    const x = new Map(result.map((r) => [r.id, r.position.x]));
+    const kids = pairs.filter(([s]) => s === 'r').map(([, t]) => x.get(t)!);
+    const midpoint = (Math.min(...kids) + Math.max(...kids)) / 2;
+
+    expect(Math.abs(x.get('r')! - midpoint)).toBeLessThanOrEqual(20);
+  });
+
+  it('centers an effect over its causes in a bottom-to-top tree (CRT style)', async () => {
+    // Causes point at their effect; the effect is laid out above them.
+    const pairs: [string, string][] = [['a', 'r'], ['b', 'r'], ['c', 'r'], ['a1', 'a'], ['a2', 'a'], ['a3', 'a']];
+    const ids = [...new Set(pairs.flat())];
+    const result = await autoLayout(ids.map(node), pairs.map(([s, t]) => edge(s, t)), { direction: 'BT' }, elkEngine);
+    const pos = new Map(result.map((r) => [r.id, r.position]));
+    const kids = ['a', 'b', 'c'].map((id) => pos.get(id)!.x);
+    const midpoint = (Math.min(...kids) + Math.max(...kids)) / 2;
+
+    expect(Math.abs(pos.get('r')!.x - midpoint)).toBeLessThanOrEqual(20);
+    expect(pos.get('r')!.y).toBeLessThan(pos.get('a')!.y);
+    expect(pos.get('a')!.y).toBeLessThan(pos.get('a1')!.y);
+  });
+});
+
+describe('autoLayout stability', () => {
+  async function relayout(nodes: DiagramNode[], edges: DiagramEdge[], cyclic: boolean) {
+    const updates = await autoLayout(nodes, edges, { direction: 'TB', cyclic }, elkEngine);
+    const pos = new Map(updates.map((u) => [u.id, u.position]));
+    return nodes.map((n) => ({ ...n, position: pos.get(n.id)! }));
+  }
+
+  // Start from scattered positions, as freshly created or AI-added nodes are.
+  function scattered(ids: string[]): DiagramNode[] {
+    return ids.map((id, i) => ({ ...node(id), position: { x: (i * 137) % 500, y: (i * 89) % 400 } }));
+  }
+
+  const cases: [string, string[], [string, string][], boolean][] = [
+    ['tree', ['r', 'a', 'b', 'c', 'a1', 'a2'], [['r', 'a'], ['r', 'b'], ['r', 'c'], ['a', 'a1'], ['a', 'a2']], false],
+    ['DAG with cross-links', ['r', 'a', 'b', 'c', 'd', 'e'], [['r', 'a'], ['r', 'b'], ['a', 'c'], ['b', 'c'], ['b', 'd'], ['a', 'e'], ['d', 'e']], false],
+    ['cyclic', ['a', 'b', 'c', 'd', 'e'], [['a', 'b'], ['b', 'c'], ['c', 'a'], ['c', 'd'], ['d', 'e'], ['e', 'c']], true],
+  ];
+
+  it.each(cases)('re-running layout on its own result changes nothing: %s', async (_name, ids, pairs, cyclic) => {
+    const edges = pairs.map(([s, t]) => edge(s, t));
+    const first = await relayout(scattered(ids), edges, cyclic);
+    const second = await relayout(first, edges, cyclic);
+
+    for (const n of first) {
+      const again = second.find((m) => m.id === n.id)!;
+      expect(again.position.x).toBeCloseTo(n.position.x, 0);
+      expect(again.position.y).toBeCloseTo(n.position.y, 0);
+    }
+  });
+});

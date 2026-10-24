@@ -346,6 +346,20 @@ describe('EntityNode', () => {
       expect(screen.getByText('&')).toBeInTheDocument();
     });
 
+    it.each([
+      ['BT', 'bottom'],
+      ['TB', 'top'],
+      ['LR', 'left'],
+      ['RL', 'right'],
+    ] as const)('puts the & symbol on the side incoming edges arrive from (%s layout -> %s)', (direction, side) => {
+      useDiagramStore.getState().updateSettings({ layoutDirection: direction });
+      const degreesMap = new Map([['n1', { indegree: 2, outdegree: 0 }]]);
+      renderNode({ junctionType: 'and', degreesMap });
+
+      const symbol = screen.getByText('&');
+      expect(symbol.closest('[data-testid]')!.getAttribute('data-testid')).toBe(`target-${side}`);
+    });
+
     it('does not show & symbol for OR junction', () => {
       const degreesMap = new Map([['n1', { indegree: 2, outdegree: 0 }]]);
       renderNode({ junctionType: 'or', degreesMap });

@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDiagramStore, useFramework } from '../../store/diagram-store';
 import { useUIStore } from '../../store/ui-store';
-import { findCausalLoops, labelCausalLoops, summarizeCausalLoops } from '../../core/graph/derived';
+import {
+  MAX_TOTAL_LOOPS,
+  findCausalLoopsWithStatus,
+  labelCausalLoops,
+  summarizeCausalLoops,
+} from '../../core/graph/derived';
 import LoopCard from '../form/LoopCard';
 import { nodeDisplayLabel } from '../../core/text/plain-text';
 
@@ -13,10 +18,11 @@ export default function SettingsPanel() {
   const selectedLoopId = useUIStore((s) => s.selectedLoopId);
   const setSelectedLoop = useUIStore((s) => s.setSelectedLoop);
   const framework = useFramework();
-  const loops = useMemo(
-    () => (framework.allowsCycles ? labelCausalLoops(findCausalLoops(edges)) : []),
-    [edges, framework.allowsCycles],
-  );
+  const { loops, truncated } = useMemo(() => {
+    if (!framework.allowsCycles) return { loops: [], truncated: false };
+    const search = findCausalLoopsWithStatus(edges);
+    return { loops: labelCausalLoops(search.loops), truncated: search.truncated };
+  }, [edges, framework.allowsCycles]);
   const loopSummary = summarizeCausalLoops(loops);
   const nodeLabels = useMemo(
     () => new Map(nodes.map((node) => [node.id, nodeDisplayLabel(node.data.label)])),
@@ -78,7 +84,7 @@ export default function SettingsPanel() {
           <p className="section-label">Feedback Loops</p>
           <div className="control-row">
             <span className="badge" style={{ backgroundColor: 'color-mix(in srgb, var(--loop-info) 8%, transparent)', color: 'var(--loop-info)' }}>
-              {loopSummary.totalLoops} Total
+              {loopSummary.totalLoops}{truncated ? '+' : ''} Total
             </span>
             <span className="badge" style={{ backgroundColor: 'color-mix(in srgb, var(--loop-reinforcing) 8%, transparent)', color: 'var(--loop-reinforcing)' }}>
               {loopSummary.reinforcingLoops} Reinforcing
@@ -87,6 +93,11 @@ export default function SettingsPanel() {
               {loopSummary.balancingLoops} Balancing
             </span>
           </div>
+          {truncated && (
+            <p className="field-label">
+              Showing the first {MAX_TOTAL_LOOPS} loops; this diagram has more.
+            </p>
+          )}
           {loops.length === 0 ? (
             <p className="field-label">No feedback loops detected yet.</p>
           ) : (

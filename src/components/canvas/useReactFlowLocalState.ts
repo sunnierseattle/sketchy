@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Edge, Node } from '@xyflow/react';
-import { mergeRFNodesWithLocalState } from './local-node-state';
+import { mergeRFEdgesWithLocalState, mergeRFNodesWithLocalState } from './local-node-state';
 
 interface UseReactFlowLocalStateOptions {
   rfNodes: Node[];
@@ -23,13 +23,7 @@ export function useReactFlowLocalState({
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLocalEdges((prev) => {
-      const selectionMap = new Map(prev.map((edge) => [edge.id, edge.selected]));
-      return rfEdges.map((edge) => ({
-        ...edge,
-        selected: selectionMap.get(edge.id) ?? false,
-      }));
-    });
+    setLocalEdges((prev) => mergeRFEdgesWithLocalState(prev, rfEdges));
   }, [rfEdges]);
 
   return {

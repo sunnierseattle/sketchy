@@ -12,6 +12,7 @@ import {
   captureOptimizedEdgeSides,
 } from './diagram-edge-routing';
 import { restoreSnapshot, snapshot } from './diagram-snapshot';
+import { waitForMeasuredNodes } from './node-measurement';
 import {
   batchAddNodes,
   batchUpdateNodes,
@@ -98,6 +99,7 @@ export function createDiagramActions(
     },
 
     runAutoLayout: async ({ commitHistory = false, fitView = true } = {}) => {
+      await waitForMeasuredNodes(() => get().diagram.nodes);
       const state = get();
 
       let updates;

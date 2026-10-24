@@ -145,7 +145,7 @@
 }
 
 .junction-symbol {
-  font-size: 0.45rem;
+  font-size: 0.6rem;
   font-weight: 900;
   line-height: 1;
   color: var(--text);
@@ -260,12 +260,24 @@
   background: var(--accent) !important;
 }
 
+/* A junction symbol (e.g. AND) is part of the diagram's meaning: keep its
+   handle visible and centre the symbol on that side's anchor point. */
+.react-flow__handle.junction-marked {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .react-flow__handle.junction-handle .junction-symbol {
   position: absolute;
   left: 50%;
-  top: 0;
+  top: 50%;
   transform: translate(-50%, -50%);
 }
+
+.react-flow__handle-top.junction-handle .junction-symbol { top: 0; }
+.react-flow__handle-bottom.junction-handle .junction-symbol { top: 100%; }
+.react-flow__handle-left.junction-handle .junction-symbol { left: 0; }
+.react-flow__handle-right.junction-handle .junction-symbol { left: 100%; }
 
 /* Annotation resize handles should match line endpoint handles. */
 .react-flow__node:has(.annotation) .react-flow__resize-control.handle {

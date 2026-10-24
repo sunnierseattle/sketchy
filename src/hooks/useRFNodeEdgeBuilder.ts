@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { MarkerType, type Edge, type Node } from '@xyflow/react';
 import { DEFAULT_EDGE_ROUTING_CONFIG, DEFAULT_EDGE_ROUTING_POLICY } from '../core/edge-routing';
 import { useDiagramStore, useFramework } from '../store/diagram-store';
@@ -15,7 +15,10 @@ import { getTheme } from '../styles/themes';
 import { ARROW_MARKER_SIZE } from '../constants/layout';
 import type { ConnectedSubgraph, NamedCausalLoop, NodeDegrees } from '../core/graph/derived';
 import { useDebouncedEdgePlacements } from './useDebouncedEdgePlacements';
-import type { Annotation } from '../core/types';
+import { createKeyedCache } from './rf-node-cache';
+import type { Annotation, DiagramEdge, DiagramNode, DiagramSettings } from '../core/types';
+import type { EdgeHandlePlacement } from '../core/graph/ports';
+import type { Framework } from '../core/framework-types';
 import { getLineNodeGeometry } from '../core/annotations/geometry';
 
 interface BuilderResult {
@@ -58,6 +61,60 @@ function annotationToRFNode(a: Annotation): Node {
       size: geometry.size,
     },
   };
+}
+
+interface EdgeBuildContext {
+  /** The edge's own source and target nodes; side selection only needs these. */
+  endpoints: DiagramNode[];
+  placement: EdgeHandlePlacement | undefined;
+  settings: DiagramSettings;
+  edgeRoutingMode: string;
+  framework: Framework;
+  activeTheme: ReturnType<typeof getTheme>;
+  highlight: 'highlighted' | 'dimmed' | 'none';
+  selected: boolean;
+  loopKind: string | undefined;
+}
+
+function buildRFEdge(e: DiagramEdge, ctx: EdgeBuildContext): Edge {
+  const { sourceSide, targetSide } = ctx.edgeRoutingMode === 'fixed'
+    ? getStoredOrAutomaticEdgeSides(e, ctx.endpoints, ctx.settings)
+    : ctx.placement ?? getAutomaticEdgeSides(e.source, e.target, ctx.endpoints, ctx.settings);
+  const targetNode = ctx.endpoints.find((n) => n.id === e.target);
+  const edgeLabel = computeEdgeLabel(e, ctx.framework, targetNode?.data.junctionType);
+
+  const rfEdge: Edge & { pathOptions: { borderRadius: number } } = {
+    id: e.id,
+    source: e.source,
+    target: e.target,
+    label: edgeLabel.label,
+    labelShowBg: edgeLabel.showBg,
+    labelBgPadding: [4, 2],
+    labelBgBorderRadius: 0,
+    labelBgStyle: {
+      fill: ctx.activeTheme.js.edgeLabelBg,
+      stroke: 'var(--border)',
+      strokeWidth: 1,
+    },
+    labelStyle: {
+      fill: 'var(--text-muted)',
+      fontSize: 11,
+      fontWeight: 700,
+    },
+    sourceHandle: getSourceHandleId(sourceSide),
+    targetHandle: getTargetHandleId(targetSide),
+    pathOptions: { borderRadius: 100 },
+    ...((ctx.selected || ctx.highlight === 'highlighted') && {
+      markerEnd: { type: MarkerType.ArrowClosed, width: ARROW_MARKER_SIZE, height: ARROW_MARKER_SIZE, color: ctx.activeTheme.js.arrowColorSelected },
+    }),
+    className: [
+      `edge-confidence-${e.confidence ?? 'high'}`,
+      ctx.highlight === 'none' ? '' : `edge-${ctx.highlight}`,
+      ctx.loopKind ? `edge-loop-${ctx.loopKind}` : '',
+      ctx.selected ? 'edge-selected-animated' : '',
+    ].join(' '),
+  };
+  return rfEdge;
 }
 
 export function useRFNodeEdgeBuilder(
@@ -106,76 +163,48 @@ export function useRFNodeEdgeBuilder(
     selectedLoopId: selectedLoop?.id ?? null,
   }), [searchLower, highlightSets, selectedDiagramNodeIds, selectedEdgeIds, selectedLoop]);
 
-  const rfNodes: Node[] = useMemo(
-    () => [
-      ...annotations.map(annotationToRFNode),
-      ...nodes.map((n) => ({
-        id: n.id,
-        type: n.type,
-        position: n.position,
-        draggable: !n.data.locked,
-        data: {
-          ...n.data,
-          degreesMap,
-          highlightState: computeNodeHighlightState(n.id, markdownToPlainText(n.data.label), highlightCtx),
-          loopKind: selectedLoop && highlightSets?.nodeIds.has(n.id)
-            ? selectedLoop.kind
-            : undefined,
-        },
-      })),
-    ],
-    [nodes, annotations, degreesMap, highlightSets, selectedLoop, highlightCtx],
-  );
+  const [nodeCache] = useState(() => createKeyedCache<Node>());
 
-  const rfEdges: Edge[] = useMemo(
-    () => {
-      return edges.map((e) => {
-        const { sourceSide, targetSide } = edgeRoutingMode === 'fixed'
-          ? getStoredOrAutomaticEdgeSides(e, nodes, settings)
-          : optimizedPlacements.get(e.id) ?? getAutomaticEdgeSides(e.source, e.target, nodes, settings);
+  const rfNodes: Node[] = useMemo(() => {
+    nodeCache.retain(new Set([...annotations, ...nodes].map((item) => item.id)));
+    return [
+      ...annotations.map((a) => nodeCache.get(a.id, [a], () => annotationToRFNode(a))),
+      ...nodes.map((n) => {
+        const highlightState = computeNodeHighlightState(n.id, markdownToPlainText(n.data.label), highlightCtx);
+        const loopKind = selectedLoop && highlightSets?.nodeIds.has(n.id) ? selectedLoop.kind : undefined;
+        return nodeCache.get(n.id, [n, degreesMap, highlightState, loopKind], () => ({
+          id: n.id,
+          type: n.type,
+          position: n.position,
+          draggable: !n.data.locked,
+          data: { ...n.data, degreesMap, highlightState, loopKind },
+        }));
+      }),
+    ];
+  }, [nodeCache, nodes, annotations, degreesMap, highlightSets, selectedLoop, highlightCtx]);
 
-        const targetNode = nodes.find((n) => n.id === e.target);
-        const edgeLabel = computeEdgeLabel(e, framework, targetNode?.data.junctionType);
+  const [edgeCache] = useState(() => createKeyedCache<Edge>());
 
-        return {
-          id: e.id,
-          source: e.source,
-          target: e.target,
-          label: edgeLabel.label,
-          labelShowBg: edgeLabel.showBg,
-          labelBgPadding: [4, 2],
-          labelBgBorderRadius: 0,
-          labelBgStyle: {
-            fill: activeTheme.js.edgeLabelBg,
-            stroke: 'var(--border)',
-            strokeWidth: 1,
-          },
-          labelStyle: {
-            fill: 'var(--text-muted)',
-            fontSize: 11,
-            fontWeight: 700,
-          },
-          sourceHandle: getSourceHandleId(sourceSide),
-          targetHandle: getTargetHandleId(targetSide),
-          pathOptions: { borderRadius: 100 },
-          ...((selectedEdgeIds.includes(e.id) || highlightSets?.edgeIds.has(e.id)) && {
-            markerEnd: { type: MarkerType.ArrowClosed, width: ARROW_MARKER_SIZE, height: ARROW_MARKER_SIZE, color: activeTheme.js.arrowColorSelected },
-          }),
-          className: [
-            `edge-confidence-${e.confidence ?? 'high'}`,
-            highlightSets
-              ? highlightSets.edgeIds.has(e.id) ? 'edge-highlighted' : 'edge-dimmed'
-              : '',
-            selectedLoop && highlightSets?.edgeIds.has(e.id)
-              ? `edge-loop-${selectedLoop.kind}`
-              : '',
-            selectedEdgeIds.includes(e.id) ? 'edge-selected-animated' : '',
-          ].join(' '),
-        };
-      });
-    },
-    [edges, nodes, settings, edgeRoutingMode, framework, highlightSets, selectedLoop, selectedEdgeIds, activeTheme, optimizedPlacements],
-  );
+  const rfEdges: Edge[] = useMemo(() => {
+    edgeCache.retain(new Set(edges.map((e) => e.id)));
+    const nodesById = new Map(nodes.map((n) => [n.id, n]));
+    return edges.map((e) => {
+      const source = nodesById.get(e.source);
+      const target = nodesById.get(e.target);
+      const placement = edgeRoutingMode === 'fixed' ? undefined : optimizedPlacements.get(e.id);
+      const highlight = highlightSets ? (highlightSets.edgeIds.has(e.id) ? 'highlighted' : 'dimmed') : 'none';
+      const selected = selectedEdgeIds.includes(e.id);
+      const loopKind = selectedLoop && highlightSets?.edgeIds.has(e.id) ? selectedLoop.kind : undefined;
+      return edgeCache.get(
+        e.id,
+        [e, source, target, placement, settings, edgeRoutingMode, framework, activeTheme, highlight, selected, loopKind],
+        () => buildRFEdge(e, {
+          endpoints: [source, target].filter((n): n is DiagramNode => n !== undefined),
+          placement, settings, edgeRoutingMode, framework, activeTheme, highlight, selected, loopKind,
+        }),
+      );
+    });
+  }, [edgeCache, edges, nodes, settings, edgeRoutingMode, framework, highlightSets, selectedLoop, selectedEdgeIds, activeTheme, optimizedPlacements]);
 
   return { rfNodes, rfEdges, defaultEdgeOptions, activeTheme };
 }

@@ -1,4 +1,4 @@
-export type ElkAlgorithm = 'layered' | 'force' | 'stress' | 'radial';
+export type ElkAlgorithm = 'layered' | 'mrtree' | 'force' | 'stress' | 'radial';
 type ElkAlgorithmOverride = ElkAlgorithm | null;
 
 type ElkLayeringStrategy =
@@ -32,6 +32,13 @@ type ElkCycleBreakingStrategy =
 
 type ElkWrappingStrategy = 'OFF' | 'SINGLE_EDGE' | 'MULTI_EDGE';
 
+/**
+ * Brandes-Köpf alignment. NONE lets ELK pick one of four skewed alignments,
+ * which often parks a parent at the far end of its children; BALANCED
+ * averages them and keeps parents centered.
+ */
+type ElkBkAlignment = 'NONE' | 'LEFTUP' | 'RIGHTUP' | 'LEFTDOWN' | 'RIGHTDOWN' | 'BALANCED';
+
 export interface ElkExperimentSettings {
   algorithmOverride: ElkAlgorithmOverride;
   aspectRatio: number;
@@ -40,6 +47,7 @@ export interface ElkExperimentSettings {
   separateConnectedComponents: boolean;
   layeringStrategy: ElkLayeringStrategy;
   nodePlacementStrategy: ElkNodePlacementStrategy;
+  bkFixedAlignment: ElkBkAlignment;
   cycleBreakingStrategy: ElkCycleBreakingStrategy;
   wrappingStrategy: ElkWrappingStrategy;
   favorStraightEdges: boolean;
@@ -56,6 +64,7 @@ export const DEFAULT_ELK_EXPERIMENT_SETTINGS: ElkExperimentSettings = {
   separateConnectedComponents: true,
   layeringStrategy: 'NETWORK_SIMPLEX',
   nodePlacementStrategy: 'BRANDES_KOEPF',
+  bkFixedAlignment: 'BALANCED',
   cycleBreakingStrategy: 'GREEDY',
   wrappingStrategy: 'OFF',
   favorStraightEdges: true,

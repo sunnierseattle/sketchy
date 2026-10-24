@@ -8,6 +8,7 @@ import {
   HANDLE_CORNER_OFFSET,
   VISIBLE_HANDLE_SIDES,
   getBaseHandleSide,
+  getPrimaryFlowSides,
 } from '../../core/graph/ports';
 import type { CardinalHandleSide, EdgeHandleSide as HandleSide } from '../../core/types';
 import { useTouchNodeEditing } from '../../hooks/useTouchNodeEditing';
@@ -83,6 +84,9 @@ function EntityNode({ id, data, selected }: NodeProps) {
   const updateNodeJunction = useDiagramStore((s) => s.updateNodeJunction);
   const framework = useFramework();
   const showTags = useDiagramStore((s) => s.diagram.settings.showTags);
+  const layoutDirection = useDiagramStore((s) => s.diagram.settings.layoutDirection);
+  // The junction symbol belongs where incoming edges arrive for this layout.
+  const junctionSide = getPrimaryFlowSides(layoutDirection).targetSide;
   const isAiModified = useChatStore((s) => s.aiModifiedNodeIds.has(id));
   const connection = useConnection();
   const isConnectionInProgress = connection.inProgress;
@@ -114,6 +118,7 @@ function EntityNode({ id, data, selected }: NodeProps) {
   const junctionOptions = getJunctionOptions(framework);
   const junctionState = getJunctionState(framework, degrees.indegree, nodeData.junctionType);
   const showJunction = junctionState !== null;
+  const junctionSymbol = junctionOptions.find((o) => o.id === nodeData.junctionType)?.symbol;
   const nextJunctionId = junctionState?.next.id;
   const handleJunctionToggle = useCallback(
     (e: React.MouseEvent) => {
@@ -216,14 +221,13 @@ function EntityNode({ id, data, selected }: NodeProps) {
           position={getPositionForBaseSide(getBaseHandleSide(side))}
           id={`target-${side}`}
           style={getVisibleHandleStyle(side)}
-          className={`handle-target handle-${side} ${showJunction ? 'junction-handle nodrag' : ''}`}
+          className={`handle-target handle-${side} ${showJunction ? 'junction-handle nodrag' : ''} ${showJunction && side === junctionSide && junctionSymbol ? 'junction-marked' : ''}`}
           onClick={showJunction ? handleJunctionToggle : undefined}
           title={showJunction ? `Junction: ${junctionOptions.find((o) => o.id === nodeData.junctionType)?.label ?? nodeData.junctionType} — click to toggle` : undefined}
         >
-          {showJunction && side === 'top' && (() => {
-            const sym = junctionOptions.find((o) => o.id === nodeData.junctionType)?.symbol;
-            return sym ? <span className="junction-symbol">{sym}</span> : null;
-          })()}
+          {showJunction && side === junctionSide && junctionSymbol && (
+            <span className="junction-symbol">{junctionSymbol}</span>
+          )}
         </Handle>
       ))}
 

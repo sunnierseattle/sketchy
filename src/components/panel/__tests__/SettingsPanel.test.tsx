@@ -50,6 +50,17 @@ describe('SettingsPanel', () => {
     expect(screen.getByText('Causal Loop Diagram')).toBeInTheDocument();
   });
 
+  it('says when the loop list is capped instead of showing a misleading total', () => {
+    const store = useDiagramStore.getState();
+    const ids = Array.from({ length: 7 }, (_, i) => store.addNode({ x: i * 150, y: 0 }));
+    for (const a of ids) for (const b of ids) if (a !== b) store.addEdge(a, b);
+
+    render(<SettingsPanel />);
+
+    expect(screen.getByText('200+ Total')).toBeInTheDocument();
+    expect(screen.getByText(/Showing the first 200 loops/)).toBeInTheDocument();
+  });
+
   it('lists loop members as plain text and never shows raw IDs', () => {
     const store = useDiagramStore.getState();
     const a = store.addNode({ x: 0, y: 0 });
