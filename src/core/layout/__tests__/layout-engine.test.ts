@@ -36,9 +36,9 @@ describe('estimateHeight', () => {
 describe('resolveElkAlgorithm', () => {
   it('uses framework defaults when there is no override', () => {
     expect(getDefaultElkAlgorithm(false)).toBe('layered');
-    expect(getDefaultElkAlgorithm(true)).toBe('force');
+    expect(getDefaultElkAlgorithm(true)).toBe('stress');
     expect(resolveElkAlgorithm(null, false)).toBe('layered');
-    expect(resolveElkAlgorithm(null, true)).toBe('force');
+    expect(resolveElkAlgorithm(null, true)).toBe('stress');
   });
 
   it('preserves explicit overrides on both cyclic and acyclic layouts', () => {

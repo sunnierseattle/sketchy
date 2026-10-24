@@ -48,6 +48,8 @@ export interface ElkExperimentSettings {
   layeringStrategy: ElkLayeringStrategy;
   nodePlacementStrategy: ElkNodePlacementStrategy;
   bkFixedAlignment: ElkBkAlignment;
+  /** Target edge length for the stress layout used by cyclic diagrams. */
+  stressEdgeLength: number;
   cycleBreakingStrategy: ElkCycleBreakingStrategy;
   wrappingStrategy: ElkWrappingStrategy;
   favorStraightEdges: boolean;
@@ -65,6 +67,7 @@ export const DEFAULT_ELK_EXPERIMENT_SETTINGS: ElkExperimentSettings = {
   layeringStrategy: 'NETWORK_SIMPLEX',
   nodePlacementStrategy: 'BRANDES_KOEPF',
   bkFixedAlignment: 'BALANCED',
+  stressEdgeLength: 220,
   cycleBreakingStrategy: 'GREEDY',
   wrappingStrategy: 'OFF',
   favorStraightEdges: true,
