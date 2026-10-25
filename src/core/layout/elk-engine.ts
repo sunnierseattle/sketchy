@@ -1,6 +1,7 @@
 import type { LayoutEngine } from './layout-engine';
 import { DEFAULT_ELK_EXPERIMENT_SETTINGS, type ElkAlgorithm, type ElkExperimentSettings } from './elk-options';
 import { classifyTreeShape, computeOutTreeDepths } from './tree-shape';
+import { withStackedLeaves } from './leaf-stacking';
 import type { LayoutDirection } from '../framework-types';
 
 import ELK from 'elkjs/lib/elk.bundled.js';
@@ -177,11 +178,13 @@ const stressEngine: LayoutEngine = async (nodes, edges, options) => {
   return (laid.children ?? []).map((child) => ({ id: child.id, x: child.x ?? 0, y: child.y ?? 0 }));
 };
 
+const stackedTreeEngine = withStackedLeaves(treeEngine);
+
 export const elkEngine: LayoutEngine = async (nodes, edges, options) => {
   const override = options.elk?.algorithmOverride ?? DEFAULT_ELK_EXPERIMENT_SETTINGS.algorithmOverride;
   const algorithm = resolveElkAlgorithm(override, options.cyclic);
   if (!override && algorithm === 'layered' && classifyTreeShape(nodes.map((node) => node.id), edges)) {
-    return treeEngine(nodes, edges, options);
+    return stackedTreeEngine(nodes, edges, options);
   }
   if (algorithm === 'stress') return stressEngine(nodes, edges, options);
   return createElkEngine(algorithm)(nodes, edges, options);

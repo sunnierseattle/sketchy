@@ -71,3 +71,32 @@ test('a second auto-layout right after the first changes nothing', async ({ page
   });
   expect(moved).toBe(0);
 });
+
+test('auto-layout hangs a wide org chart\'s reports in columns instead of one long row', async ({ page }) => {
+  await page.evaluate(async () => {
+    const store = (window as unknown as StoreWindow).__diagramStore;
+    const nodes = [{ id: 'ceo', label: 'CEO' }];
+    const edges: { source: string; target: string }[] = [];
+    for (let m = 0; m < 6; m++) {
+      nodes.push({ id: `m${m}`, label: `Manager ${m}` });
+      edges.push({ source: `m${m}`, target: 'ceo' });
+      for (let r = 0; r < 7; r++) {
+        nodes.push({ id: `m${m}r${r}`, label: `Report ${m}.${r}` });
+        edges.push({ source: `m${m}r${r}`, target: `m${m}` });
+      }
+    }
+    store.getState().batchApply({ addNodes: nodes, addEdges: edges });
+    await store.getState().runAutoLayout({ commitHistory: true, fitView: true });
+  });
+
+  const shape = await page.evaluate(() => {
+    const store = (window as unknown as { __diagramStore: { getState: () => { diagram: { nodes: { position: { x: number; y: number }; data: { label: string } }[] } } } }).__diagramStore;
+    const reports = store.getState().diagram.nodes.filter((n) => n.data.label.startsWith('Report 0.'));
+    return {
+      columns: new Set(reports.map((n) => Math.round(n.position.x))).size,
+      rows: new Set(reports.map((n) => Math.round(n.position.y))).size,
+    };
+  });
+  // Side by side, the 7 reports would be 7 columns in one row.
+  expect(shape).toEqual({ columns: 2, rows: 4 });
+});
