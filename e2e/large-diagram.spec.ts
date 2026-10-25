@@ -72,7 +72,13 @@ test('a second auto-layout right after the first changes nothing', async ({ page
   expect(moved).toBe(0);
 });
 
-test('auto-layout hangs a wide org chart\'s reports in columns instead of one long row', async ({ page }) => {
+const layouts = [
+  ['org-structure', 'hangs a wide org chart\'s reports in columns', { columns: 2, rows: 4 }],
+  ['crt', 'keeps a wide CRT\'s sibling causes side by side', { columns: 7, rows: 1 }],
+] as const;
+
+for (const [frameworkId, behavior, expected] of layouts) test(`auto-layout ${behavior}`, async ({ page }) => {
+  await resetApp(page, frameworkId);
   await page.evaluate(async () => {
     const store = (window as unknown as StoreWindow).__diagramStore;
     const nodes = [{ id: 'ceo', label: 'CEO' }];
@@ -97,6 +103,6 @@ test('auto-layout hangs a wide org chart\'s reports in columns instead of one lo
       rows: new Set(reports.map((n) => Math.round(n.position.y))).size,
     };
   });
-  // Side by side, the 7 reports would be 7 columns in one row.
-  expect(shape).toEqual({ columns: 2, rows: 4 });
+  // Side by side, the 7 reports are 7 columns in one row.
+  expect(shape).toEqual(expected);
 });

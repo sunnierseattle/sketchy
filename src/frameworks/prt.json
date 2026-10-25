@@ -5,6 +5,7 @@
   "description": "Map obstacles and intermediate objectives needed to reach a goal",
   "defaultLayoutDirection": "BT",
   "supportsJunctions": true,
+  "keepSiblingsInRow": true,
   "edgeLabel": "enables",
   "systemPromptHint": "Obstacles must be specific, concrete blockers — not difficulty statements. Each obstacle maps to exactly one intermediate objective that overcomes it. Sequence strictly: each IO should only be achievable after those below it are complete. If an IO cannot be assigned and completed in a bounded timeframe, it hides additional obstacles — decompose further.",
   "nodeTags": [

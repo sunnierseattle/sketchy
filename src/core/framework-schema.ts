@@ -42,6 +42,7 @@ const frameworkSchema = z.object({
   defaultLayoutDirection: z.enum(['TB', 'BT', 'LR', 'RL']),
   supportsJunctions: z.boolean(),
   allowsCycles: z.boolean().optional(),
+  keepSiblingsInRow: z.boolean().optional(),
   supportsEdgePolarity: z.boolean().optional(),
   supportsNodeValues: z.boolean().optional(),
   supportsEdgeDelay: z.boolean().optional(),

@@ -7,6 +7,7 @@ import { prepareLayoutEdges, prepareLayoutNodes } from './layout-inputs';
 export interface AutoLayoutOptions {
   direction: LayoutDirection;
   cyclic?: boolean;
+  keepSiblingsInRow?: boolean;
   elk?: ElkExperimentSettings;
 }
 
@@ -31,6 +32,7 @@ export async function autoLayout(
   const results = await engine(inputs, edgeInputs, {
     direction: options.direction,
     cyclic: useCyclicLayout,
+    keepSiblingsInRow: options.keepSiblingsInRow,
     elk: options.elk,
   });
   const tightenedResults = useCyclicLayout

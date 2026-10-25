@@ -19,6 +19,11 @@ export interface Framework {
   defaultLayoutDirection: LayoutDirection;
   supportsJunctions: boolean;
   allowsCycles?: boolean;
+  /**
+   * Keep sibling leaves side by side in auto-layout, even when a wide tree
+   * would otherwise stack them in columns (e.g. causes under one effect).
+   */
+  keepSiblingsInRow?: boolean;
   supportsEdgePolarity?: boolean;
   supportsNodeValues?: boolean;
   supportsEdgeDelay?: boolean;

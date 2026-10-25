@@ -32,6 +32,7 @@ interface Stack {
 export function withStackedLeaves(base: LayoutEngine): LayoutEngine {
   return async (nodes, edges, options) => {
     const plain = await base(nodes, edges, options);
+    if (options.keepSiblingsInRow) return plain;
     const vertical = options.direction === 'TB' || options.direction === 'BT';
     const shape = classifyTreeShape(nodes.map((n) => n.id), edges);
     const target = options.elk?.aspectRatio ?? DEFAULT_ELK_EXPERIMENT_SETTINGS.aspectRatio;

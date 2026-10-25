@@ -25,6 +25,14 @@ describe('framework definitions', () => {
     expect(fw.derivedIndicators).toBeInstanceOf(Array);
   });
 
+  it.each(['crt', 'frt', 'prt'])('%s keeps sibling causes side by side in layout', (id) => {
+    expect(getFramework(id)!.keepSiblingsInRow).toBe(true);
+  });
+
+  it.each(['org-structure', 'issue-tree'])('%s lets layout stack sibling leaves', (id) => {
+    expect(getFramework(id)!.keepSiblingsInRow).toBeFalsy();
+  });
+
   describe('CRT', () => {
     const crtFramework = getFramework('crt')!;
 

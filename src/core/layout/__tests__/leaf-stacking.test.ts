@@ -27,8 +27,13 @@ function orgChart(managers: number, reportsEach: number) {
   return { nodes: ids.map(node), edges };
 }
 
-async function layout(nodes: DiagramNode[], edges: DiagramEdge[], direction: LayoutDirection = 'BT') {
-  const updates = await autoLayout(nodes, edges, { direction }, elkEngine);
+async function layout(
+  nodes: DiagramNode[],
+  edges: DiagramEdge[],
+  direction: LayoutDirection = 'BT',
+  keepSiblingsInRow = false,
+) {
+  const updates = await autoLayout(nodes, edges, { direction, keepSiblingsInRow }, elkEngine);
   const positions = new Map(updates.map((u) => [u.id, u.position]));
   const inputs = prepareLayoutNodes(nodes, edges);
   const sizes = new Map(inputs.map((n) => [n.id, n]));
@@ -131,6 +136,14 @@ describe('leaf stacking for wide trees', () => {
     const { nodes, edges } = orgChart(6, 7);
     const { positions } = await layout(nodes, edges);
     const ys = new Set(Array.from({ length: 6 }, (_, m) => positions.get(`m${m}`)!.y));
+
+    expect(ys.size).toBe(1);
+  });
+
+  it('keeps leaves side by side when the framework asks for siblings in a row', async () => {
+    const { nodes, edges } = orgChart(6, 7);
+    const { positions } = await layout(nodes, edges, 'BT', true);
+    const ys = new Set(Array.from({ length: 7 }, (_, r) => positions.get(`m0r${r}`)!.y));
 
     expect(ys.size).toBe(1);
   });

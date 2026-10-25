@@ -102,11 +102,13 @@ export function createDiagramActions(
       await waitForMeasuredNodes(() => get().diagram.nodes);
       const state = get();
 
+      const framework = resolveFramework(state.diagram.frameworkId);
       let updates;
       try {
         updates = await runElkAutoLayout(state.diagram.nodes, state.diagram.edges, {
           direction: state.diagram.settings.layoutDirection,
-          cyclic: resolveFramework(state.diagram.frameworkId).allowsCycles,
+          cyclic: framework.allowsCycles,
+          keepSiblingsInRow: framework.keepSiblingsInRow === true,
         });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);

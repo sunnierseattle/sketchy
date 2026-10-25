@@ -5,6 +5,7 @@
   "description": "Map cause-and-effect to find root causes of undesirable effects",
   "defaultLayoutDirection": "BT",
   "supportsJunctions": true,
+  "keepSiblingsInRow": true,
   "edgeLabel": "causes",
   "systemPromptHint": "UDEs must be observable and specific — if you can't point to evidence, reword it. Every causal link must pass the sufficiency test: \"If X, then inevitably Y\" — otherwise a cause or assumption is missing. Make AND relationships explicit — most UDEs result from converging causes, not linear chains. Apply the removal test: a true root cause, when removed, eliminates multiple downstream UDEs.",
   "nodeTags": [

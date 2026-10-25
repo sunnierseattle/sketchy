@@ -283,4 +283,19 @@ describe('diagram actions', () => {
       expect(useDiagramStore.getState().canUndo).toBe(true);
     });
   });
+
+  describe('runAutoLayout', () => {
+    it.each([
+      ['crt', true],
+      ['org-structure', false],
+    ])('passes the %s framework\'s keepSiblingsInRow setting to the layout', async (frameworkId, expected) => {
+      const { runElkAutoLayout } = await import('../../core/layout/run-elk-auto-layout');
+      vi.mocked(runElkAutoLayout).mockClear();
+      useDiagramStore.getState().setFramework(frameworkId);
+
+      await useDiagramStore.getState().runAutoLayout({ fitView: false });
+
+      expect(vi.mocked(runElkAutoLayout).mock.calls[0][2].keepSiblingsInRow).toBe(expected);
+    });
+  });
 });

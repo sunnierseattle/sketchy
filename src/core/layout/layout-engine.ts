@@ -30,6 +30,8 @@ export interface LayoutResult {
 interface LayoutEngineOptions {
   direction: LayoutDirection;
   cyclic?: boolean;
+  /** Never stack sibling leaves into columns. */
+  keepSiblingsInRow?: boolean;
   elk?: ElkExperimentSettings;
 }
 
